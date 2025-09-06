@@ -1,0 +1,84 @@
+[workspace]
+name = "ultrasound-doppler-angle-estimation"
+version = "0.1.0"
+description = "Replication and extension of Patil & Anand (EMBC 2019): automated ultrasound Doppler angle estimation with deep learning."
+authors = ["Nilesh Patil <4813079+nilesh-patil@users.noreply.github.com>"]
+channels = ["conda-forge"]
+platforms = ["osx-arm64", "linux-64"]
+
+# ---------------------------------------------------------------------------
+# Shared base (conda-forge). Model code is written ONCE against Keras 3; the
+# backend is chosen per-machine by the KERAS_BACKEND env var set in each
+# feature's activation block below.
+# ---------------------------------------------------------------------------
+[dependencies]
+python = "3.11.*"
+numpy = ">=1.26,<2"   # TF 2.16 / tensorflow-metal 1.2 are numpy-1.x only; JAX is happy here too
+# NOTE: `keras` is declared per-backend feature (not here) so the conda JAX stack and
+# the pypi TF-metal stack don't collide on transitive pins (ml-dtypes, etc.).
+pandas = "*"
+scikit-image = "*"
+scikit-learn = "*"
+matplotlib = "*"
+seaborn = "*"
+pyyaml = "*"
+pydantic = ">=2"
+pytest = "*"
+h5py = "*"
+pillow = "*"
+opencv = "*"
+tqdm = "*"
+optuna = "*"   # TPE hyperparameter search (Keras-free; sits with scikit-learn).
+
+# Make the `src/` layout importable in every environment and pixi task.
+[activation.env]
+PYTHONPATH = "src"
+
+# --- cross-platform JAX-CPU dev (the default, reproducible reference) -------
+[feature.cpu.dependencies]
+jax = "*"
+keras = ">=3.5"
+[feature.cpu.activation.env]
+KERAS_BACKEND = "jax"
+
+# --- linux-64 + NVIDIA CUDA (the JAX training workhorse) --------------------
+[feature.cuda]
+platforms = ["linux-64"]
+[feature.cuda.system-requirements]
+cuda = "12"
+[feature.cuda.dependencies]
+keras = ">=3.5"
+[feature.cuda.pypi-dependencies]
+jax = { version = ">=0.4", extras = ["cuda12"] }
+[feature.cuda.activation.env]
+KERAS_BACKEND = "jax"
+
+# --- apple-silicon GPU via TF-metal (jax-metal is op-incomplete) -----------
+[feature.mac-gpu]
+platforms = ["osx-arm64"]
+[feature.mac-gpu.pypi-dependencies]
+tensorflow = "==2.16.2"
+tensorflow-metal = "==1.2.0"
+[feature.mac-gpu.activation.env]
+KERAS_BACKEND = "tensorflow"
+
+[environments]
+default = ["cpu"]      # works on osx-arm64 and linux-64, no GPU assumptions
+cuda = ["cuda"]        # `pixi run -e cuda ...`     (Linux + NVIDIA)
+mac-gpu = ["mac-gpu"]  # `pixi run -e mac-gpu ...`  (MacBook Apple-silicon GPU)
+
+# ---------------------------------------------------------------------------
+# Task surface. GPU variants run under -e mac-gpu / -e cuda.
+# ---------------------------------------------------------------------------
+[tasks]
+test = "pytest -q"
+smoke = "pytest tests/test_train.py -q"
+fetch-data = "python -m uda.cli fetch-data"
+labels = "python -m uda.cli labels"
+augment = "python -m uda.cli augment --config configs/replication_vgg19.yaml"
+figure2 = "python -m uda.cli figure2 --config configs/replication_vgg19.yaml"
+replicate = "python -m uda.cli replicate"
+tune = "python -m uda.cli tune --config configs/replication_densenet201.yaml --trials 40"
+
+[tasks.all]
+depends-on = ["labels", "replicate"]

@@ -1,0 +1,23 @@
+# legacy artifacts (kept from the original 2018 tree)
+01.features
+.ipynb_checkpoints
+
+# pixi / conda
+.pixi/
+*.lock.bak
+
+# python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# OS
+.DS_Store
+
+# large regenerable caches (features HDF5); metrics/figures/report ARE tracked
+results/cache/
+results/corpus_meta.csv
+*.h5.tmp

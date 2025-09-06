@@ -1,0 +1,16 @@
+[project]
+name = "uda"
+version = "0.1.0"
+description = "Ultrasound Doppler angle estimation — replication and extension of Patil & Anand (EMBC 2019)."
+requires-python = ">=3.11"
+
+# The scientific stack is provided by pixi (conda + pypi), not by this metadata.
+dependencies = []
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "-q"
+filterwarnings = [
+  "ignore::DeprecationWarning",
+]
