@@ -1,0 +1,32 @@
+# Era-2019: from-scratch CNN (no ImageNet), end-to-end, with richer augmentation —
+# the non-transfer baseline (model_01/02/03 lineage, cleaned).
+name: scratch_cnn
+era: era2019
+seed: 42
+backbone:
+  name: cnn_scratch
+  weights: null
+  trainable: true
+  pooling: grid2
+head:
+  hidden_units: [256]
+  dropout: 0.5
+  batchnorm: true
+  final_activation: linear
+target:
+  kind: raw
+data:
+  gamma_jitter: 0.2
+  translate_frac: 0.05
+  speckle_std: 0.03
+split:
+  strategy: patient
+  test_size: 0.2
+  seed: 42
+train:
+  lr: 0.0001
+  loss: mse
+  epochs: 60
+  batch_size: 32
+  early_stopping_patience: 8
+  monitor: val_mae

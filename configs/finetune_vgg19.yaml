@@ -1,0 +1,30 @@
+# Era-2019 improvement: fine-tune (unfreeze) the VGG19 backbone end-to-end.
+# A frozen backbone gives each rotation different features and cannot exploit the
+# augmented-split leakage; an adaptable backbone can — this is what reproduces the
+# paper's headline scores AND exposes the patient-level leakage gap.
+name: finetune_vgg19
+era: era2019
+seed: 42
+backbone:
+  name: vgg19
+  weights: imagenet
+  trainable: true
+  pooling: avg
+head:
+  hidden_units: [256]
+  dropout: 0.5
+  batchnorm: true
+  final_activation: linear
+target:
+  kind: raw
+split:
+  strategy: augmented
+  test_size: 0.2
+  seed: 42
+train:
+  lr: 0.0001
+  loss: mse
+  epochs: 50
+  batch_size: 32
+  early_stopping_patience: 8
+  monitor: val_mae

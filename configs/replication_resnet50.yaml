@@ -1,0 +1,28 @@
+# Frozen replication, orientation-preserving grid pooling — ResNet50. Augmented = paper protocol.
+name: replication_resnet50
+era: replication
+seed: 42
+backbone:
+  name: resnet50
+  weights: imagenet
+  trainable: false
+  pooling: grid2
+head:
+  hidden_units: [256]
+  dropout: 0.5
+  batchnorm: true
+  l2: 0.0
+  final_activation: linear
+target:
+  kind: raw
+split:
+  strategy: augmented
+  test_size: 0.2
+  seed: 42
+train:
+  lr: 0.0001
+  loss: mse
+  epochs: 150
+  batch_size: 32
+  early_stopping_patience: 15
+  monitor: val_mae
