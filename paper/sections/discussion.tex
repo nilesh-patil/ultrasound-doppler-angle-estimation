@@ -1,0 +1,272 @@
+\section{Discussion and Conclusion}
+\label{sec:discussion}
+
+\subsection{Orientation is the signal: why grid pooling is load-bearing}
+
+The central deep-learning finding of this work is that reading the Doppler angle
+$\theta$ from a B-mode image is an orientation-regression problem, and that the
+conventional global-average-pooling (GAP) head is structurally unsuited to it.
+GAP collapses a convolutional feature map by averaging over every spatial
+position, a reduction that is approximately invariant to in-plane rotation of the
+input. Invariance to orientation is the wrong inductive bias when the quantity to
+be predicted is itself an orientation, because the head discards the very signal
+the target depends on. The effect is large. Under image-level five-fold
+cross-validation a frozen DenseNet201 with a GAP head scores
+\SI{10.85}{\percent} MAPE, and under the stricter patient-level protocol it scores
+\SI{18.7}{\percent}.
+
+Replacing GAP with an orientation-preserving grid-pooling head recovers most of
+that loss. The head average-pools the feature map onto a small $G\times G$ grid
+and flattens it, so the coarse spatial layout of vessel structure survives into
+the regressor. At image level this takes frozen DenseNet201~\citep{Huang2017} from
+\SI{10.85}{\percent} to \SI{4.58}{\percent} MAPE under five-fold cross-validation,
+roughly halving the error, and reaches \SI{5.84}{\percent} MAPE
+(\SI{3.77}{\degree} MAE) on the original single augmented split
+(Table~\ref{tab:replication}), reproducing the regime of the EMBC~2019
+study~\citep{Patil2019} with no fine-tuning. The backbone, even frozen, already
+encodes the vessel orientation; the work is in not pooling it away. The Grad-CAM
+attributions~\citep{Selvaraju2017} (Fig.~\ref{fig:gradcam}) are consistent with
+this reading, concentrating on the vessel region that defines the flow axis rather
+than on background texture. We note that a hand-built structure-tensor prior reaches
+\SI{3.16}{\degree} MAE on the narrow base-angle band with no learning at all
+(\S\ref{sec:discussion}), so grid pooling is not the only route to a usable angle
+estimate; what it provides is a frozen-backbone learned pipeline that is competitive
+on the angular target. We offer the pooling lesson as a hypothesis worth testing
+beyond this one task: when a regression target is a spatial pose or orientation, the
+pooling operator should be chosen to preserve the geometry the label encodes rather
+than average it out. The present evidence for that lesson is a single carotid task on
+a few dozen subjects.
+
+\subsection{Why newer backbones lose on tiny data}
+
+The architecture bake-off (Fig.~\ref{fig:bakeoff}, frozen, patient-level five-fold
+cross-validation, untuned heads) runs against the usual ImageNet-leaderboard
+intuition. On the extraction-matched comparison, frozen DenseNet201 leads at
+\SI{14.1}{\percent} MAPE ($\pm$\SI{2.19}{\percent}), ahead of the best modern
+encoder, ConvNeXt-Base~\citep{Liu2022}, at \SI{15.7}{\percent}
+($\pm$\SI{1.75}{\percent}); ConvNeXt-Tiny follows at \SI{16.1}{\percent} and the
+EfficientNet and EfficientNetV2~\citep{Tan2019} families trail at
+\SIrange{17}{21}{\percent}. The DenseNet and ConvNeXt-Base intervals overlap, so
+the ranking among the leaders should be read as a draw rather than a clear win.
+The remaining classic backbones (ResNet50~\citep{He2016},
+Xception~\citep{Chollet2017}, InceptionV3~\citep{Szegedy2016},
+VGG19~\citep{Simonyan2015}) were extracted with the replication-era pipeline, so we
+do not rank them against ConvNeXt strictly like-for-like. The claim here is narrow:
+on this task no newer or larger backbone improves on a frozen 2017 DenseNet201, not
+that classic architectures beat modern ones as a family.
+
+The likely reason is leverage rather than encoder quality. With only \num{84} base
+images and frozen weights, no gradient reaches the backbone. The encoder supplies a
+fixed feature basis, and the only fitted parameters live in the shallow head.
+Architectures whose ImageNet advantage is realized through end-to-end training have
+nothing to grip under a frozen protocol, and their feature statistics, tuned to a
+classification objective, are no better matched to an angular regression target than
+those of an older network. DenseNet201 happens to fit this task well across our
+measurements: it yields the highest $R^2$, wins the replication, and remains
+strongest after tuning. We read this as an empirical fact about our extraction
+rather than a proven property of dense feature reuse, and we note that the original
+study found VGG19 best under per-model tuning. We carry DenseNet201 forward. The
+caution for small-cohort imaging is that benchmark rankings established on
+million-image corpora do not transfer to a frozen-feature regime over a few dozen
+subjects.
+
+\subsection{Two protocols, two questions}
+
+We report and tune the estimator under two complementary sampling protocols, which
+answer different questions. \emph{Image-level sampling} partitions the
+rotation-augmented corpus at the image level, the original study's protocol, and
+measures how accurately the model reads $\theta$ across the population of
+orientations and imaging conditions the augmentation spans. \emph{Patient-level
+sampling} holds out whole volunteers via grouped cross-validation and measures
+generalization to anatomy the model has never seen. The patient-level number is
+naturally larger (Table~\ref{tab:dual_protocol}, Fig.~\ref{fig:protocol_gap}): once
+volunteer-specific appearance can no longer be exploited, the model must transfer
+across subjects. For the tuned stacked ensemble the image-level error is
+\SI{2.79}{\percent} MAPE (\SI{1.96}{\degree} MAE, $R^2=0.995$) and the
+patient-level error is \SI{8.53}{\percent} MAPE (\SI{5.93}{\degree} MAE,
+$R^2=0.952$). The patient-level figure carries appreciable fold variance: per-fold
+MAPE standard deviations are \SIrange{2.6}{4.4}{\percent} on the few held-out groups
+per fold (Table~\ref{tab:dual_protocol}), so a spread of a few percentage points
+around the \SI{8.53}{\percent} headline is expected, and the cross-subject estimate
+should be read with that uncertainty in mind.
+
+The gap between the two protocols is itself a measurement. It quantifies how much of
+the within-population accuracy is anatomy-specific, that is, the cost of
+cross-subject generalization. A reader sizing the method for deployment should weigh
+the patient-level figure when the operative question is a new patient, and the
+image-level figure when it is accuracy across the imaging conditions the corpus
+represents. The per-backbone ordering is broadly stable across both lenses, though
+not perfectly: under patient-level MAPE, VGG19 (\SI{14.97}{\percent}) and
+InceptionV3 (\SI{14.66}{\percent}) sit within \SI{0.3}{} percentage points and
+exchange ranks. The lesson for small-cohort medical imaging is that the sampling
+protocol is part of the result. Augmentation manufactures correlated samples, so the
+unit of statistical independence is the patient, not the image, and reporting both
+protocols is more informative than privileging one.
+
+Two comparisons need a word on aggregation, because the numbers are aggregated
+differently. The single tuned DenseNet201 (\SI{3.00}{\degree} MAE,
+\SI{4.03}{\percent} MAPE image-level) reproduces the best single model of the
+EMBC~2019 work~\citep{Patil2019} ($\approx\SI{2.87}{\degree}$ MAE,
+\SI{4.03}{\percent} MAPE). Head tuning~\citep{Akiba2019,Bergstra2011} and a
+five-model stacked ensemble~\citep{Wolpert1992} improve on it and additionally
+supply the previously unmeasured patient-level result. The per-backbone member
+figures above are per-fold cross-validation means, whereas the ensemble figures are
+pooled out-of-fold. Aggregated the same pooled-OOF way, the single tuned
+DenseNet201 reaches \SI{7.80}{\degree} MAE patient-level, so the genuine ensembling
+gain over the best single model is about \SI{1.9}{\degree} MAE; the larger apparent
+gap between member and ensemble rows partly reflects the per-fold-mean versus
+pooled-OOF aggregation rather than the ensemble alone.
+
+\subsection{Uncertainty quantification and method-vs-reference agreement}
+
+A point estimate alone is not clinically actionable, so we also report calibrated
+prediction intervals. Split-conformal intervals~\citep{Vovk2005,Lei2018}, computed
+on a single patient-disjoint calibration/test split, attain empirical coverage at or
+above their nominal level at every level tested (Table~\ref{tab:clinical},
+Fig.~\ref{fig:calibration}): the \SI{90}{\percent} interval has half-width
+$\pm\SI{20.50}{\degree}$ with \SI{95.2}{\percent} empirical coverage, and the
+\SI{95}{\percent} interval has half-width $\pm\SI{26.03}{\degree}$ with
+\SI{97.8}{\percent} coverage. Two qualifications apply. The validity guarantee is
+distribution-free and finite-sample under exchangeability; with grouped data and
+only ten volunteers, exchangeability across patients is the assumption most at risk,
+and coverage is marginal over the population rather than conditional on the
+individual case. The reported coverages are single empirical numbers on a small test
+set and therefore carry wide binomial uncertainty, so the observed over-coverage is
+as consistent with conservative (somewhat too wide) intervals as with tight
+calibration.
+
+The intervals are wide, and the width is a property of a ten-volunteer cohort rather
+than a modelling artifact. A wide interval that covers is still more useful for a
+velocity-correction decision than a narrow one that does not, because it does not
+mask the state of the evidence. We are careful about what such an interval offers in
+practice: because the half-width is fixed across cases, it reports population-level
+coverage and does not flag which individual readings are unreliable. For the
+$\cos\theta$ velocity correction a half-width of \SIrange{20.50}{26.03}{\degree} can
+move the correction factor substantially, so whether a band this wide is directly
+actionable per case is an open question that external data would have to settle.
+
+The Bland--Altman analysis~\citep{BlandAltman1986} (Fig.~\ref{fig:bland_altman})
+reports a bias of $-\SI{4.31}{\degree}$ (method minus reference: the model reads
+slightly low) and limits of agreement of $-24.25$ to $+\SI{15.63}{\degree}$. There
+is exactly one human angle reading per image, the MATLAB-GUI annotation that serves
+as the label, so this is a method-vs-reference comparison against a single reading
+and not an inter-observer study. Without a second reader we cannot quantify the
+irreducible human labelling variability against which an automated method should
+ultimately be judged, and the reference reading is itself a noisy estimate of the
+true flow angle. The bias also has a direction. A consistent low-angle bias shifts
+the $\cos\theta$ velocity correction the same way for every case, which for an
+application like stenosis grading is a systematic error rather than random scatter,
+and a directional offset of this size warrants attention even though it is small and
+fully characterized in our cohort.
+
+Two further analyses are encouraging within these bounds, though on a different
+evaluation unit. Both are computed on the \num{84} base images over the narrow
+base-angle band, not on the patient-level OOF protocol, so they are not directly
+comparable to the patient-level ensemble MAE of \SI{5.93}{\degree}. Rotation-based
+test-time augmentation, combined under a seam-safe circular median over de-rotated
+views, reduces the raw base-image MAE from \SI{7.80}{\degree} to \SI{4.72}{\degree}
+with no retraining. A circular fusion of the learned estimate with a classical
+structure-tensor angle prior reaches \SI{2.72}{\degree} MAE on the same band,
+beating either the learned model or the geometric prior (\SI{3.16}{\degree} MAE)
+alone, which suggests that a data-driven encoder and a hand-crafted geometric cue
+capture partly complementary information.
+
+\subsection{Clinical relevance and deployment}
+
+The clinical appeal of an image-only estimator is that it slots into the existing
+Doppler workflow without changing it. Angle correction is today a manual cursor
+placement, a recurring source of error and, as noted in \S\ref{sec:intro}, a
+deficiency flagged in vascular-laboratory accreditation. An automated reading
+accurate to a few degrees could pre-populate or sanity-check that cursor and reduce
+the operator-dependent variation in the measured angle. We are careful not to
+overstate this. The labels come from a single annotator with no inter-observer
+baseline, so an estimator trained against them can at best reproduce that
+annotator's readings and their biases; it cannot independently correct operator
+error or claim to standardize against a validated ground truth. Any downstream
+benefit to velocity estimation or stenosis grading is a plausible motivation rather
+than a measured result, since neither was evaluated here.
+
+Because the estimator consumes only the formed grayscale B-mode frame, with no
+color Doppler, no segmentation, and no knowledge of the vendor-specific beamforming
+path, it could in principle be packaged as a software add-on. We have not tested
+this: the cohort is single-scanner and single-center, so cross-vendor behavior is
+unknown and the device-agnostic framing is a design property rather than a validated
+capability. The conformal intervals are relevant to deployment in that a tool
+reporting a calibrated band alongside its point estimate communicates population-level
+uncertainty rather than a bare number, which is a safer default than silent
+over-confidence. As noted above, a fixed-width marginal interval does not identify
+which individual cases are uncertain, so it supports a general posture of caution
+more than per-case triage. Realizing any of this would require the external
+validation discussed below; the present results establish that the core estimate is
+accurate and reproducible under our protocols, which is what justifies pursuing that
+validation.
+
+\subsection{Limitations}
+
+The cohort is small: about ten volunteers and \num{84} base images from a single
+center, a single scanner, and the carotid only. Patient-level cross-validation
+therefore rests on a handful of held-out subjects per fold, the per-fold variance is
+non-negligible (see the \SIrange{2.6}{4.4}{\percent} MAPE standard deviations of
+Table~\ref{tab:dual_protocol}), and external validity to other vendors, anatomies,
+and acquisition settings is untested. The method has never seen a tortuous vessel, a
+bifurcation, plaque, or a non-carotid site, so any workflow claim beyond the imaged
+population is speculative. There is a single reference reading per image, so the
+agreement analysis is method-vs-reference rather than inter-observer, and the upper
+bound on achievable accuracy set by human labelling noise is unknown. Finally, every
+learned result here uses a frozen ImageNet backbone with only a trained pooling head;
+the encoder is never updated. The estimator should be read as a strong, fully
+reproducible frozen-feature baseline, not as the ceiling of what this task admits.
+
+\subsection{Future work}
+
+The frozen-only scope leaves several directions for once dedicated accelerator
+hardware is available. End-to-end fine-tuning of the backbone, left unrun here, is
+the most direct candidate for improving the patient-level number, since it would let
+the encoder adapt its features from a generic classification basis to the
+angular-regression objective. Self-supervised pretraining on the unlabelled carotid
+frames could yield representations less dependent on the small labelled cohort and so
+better cross-subject transfer. Geometry-aware alternatives to grid pooling, an
+explicitly circular treatment of the angular target across the full $360^{\circ}$
+range, and orientation-equivariant heads are natural architectural extensions of the
+pooling insight. On the evaluation side, a multi-reader study would convert the
+method-vs-reference agreement into a proper inter-observer comparison and establish
+the human-noise floor, and a multi-center, multi-vendor cohort would test the
+external validity that a single-center dataset cannot. None of these is claimed as a
+result of the present paper; they are the experiments the present results motivate.
+
+\subsection{Conclusion}
+
+We have presented a reproducible, frozen-backbone estimator of the Doppler
+beam-to-vessel angle from a single grayscale B-mode carotid image, and isolated the
+design choice that makes a frozen pipeline competitive on this orientation-regression
+task: orientation-preserving grid pooling in place of global average pooling. Optuna
+head tuning and a five-model stacked ensemble yield our best estimator, reported
+under two complementary sampling protocols. The image-level error is
+\SI{2.79}{\percent} MAPE (\SI{1.96}{\degree} MAE, $R^2=0.995$) and the patient-level
+error is \SI{8.53}{\percent} MAPE (\SI{5.93}{\degree} MAE, $R^2=0.952$), the latter
+with the fold variance noted above. Against the one prior point of comparison on this
+task, the EMBC~2019 study, the tuned ensemble improves on the published image-level
+figures. An architecture bake-off shows that no newer or larger backbone improves on
+a frozen 2017 DenseNet201 on this cohort, and the evaluation equips the method with
+distribution-free conformal intervals and a method-vs-reference agreement analysis.
+The takeaway is twofold. For this task, automated Doppler-angle estimation is
+accurate and now reproducible, characterized under both the image-level and the
+stricter patient-level lens. For small-cohort medical imaging more broadly, matching
+the pooling operator to the geometry of the target, reporting accuracy under more
+than one sampling protocol, and supplying calibrated intervals rather than a single
+point estimate are practices that make such a method easier to trust.
+
+\subsection*{Reproducibility}
+
+Every table and figure in this paper is regenerated from saved results by code, with
+no hand-entered numbers. The data is the public SPLab common-carotid B-mode set; the
+pipeline (data preparation, the rotation-augmentation corpus, frozen feature
+extraction, the grid-pooling head, Optuna tuning, ensembling, and the conformal /
+Bland--Altman / TTA evaluation) is deterministic under a fixed seed ($42$) and runs
+on a CPU. After preparing the corpus and cross-validation results, the analysis
+tables are produced by a single table-generation script and the figures by a single
+figure-generation script; both read only the saved cross-validation summaries and
+out-of-fold predictions. The frozen patient- and image-level five-fold
+cross-validation that underlies the protocol comparison and the architecture bake-off
+is likewise produced by a single command per backbone, so the reported means and
+standard deviations can be reproduced end to end from the raw images.

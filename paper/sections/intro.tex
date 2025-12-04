@@ -1,0 +1,227 @@
+\section{Introduction}
+\label{sec:intro}
+
+\subsection{Clinical motivation}
+\label{sec:intro:clinical}
+
+Spectral Doppler ultrasound infers blood-flow velocity from the frequency shift
+$\fd$ that moving red blood cells impose on the insonating beam. The shift and
+the velocity are tied by the Doppler equation,
+%
+\begin{equation}
+  \fd \;=\; \frac{2\,f_0\,v\,\cos\theta}{c},
+  \label{eq:doppler}
+\end{equation}
+%
+where $f_0$ is the transmit frequency, $v$ the flow speed, $c$ the speed of
+sound in soft tissue, and $\theta$ the \emph{Doppler angle} between the beam and
+the local direction of flow. Rearranging for the clinically reported quantity
+gives $v = c\,\fd / (2 f_0 \cos\theta)$, so every velocity estimate carries a
+multiplicative $1/\cos\theta$ correction.
+
+The machine does not measure $\theta$. The sonographer sets it by hand, aligning
+a steering cursor with the vessel wall on the live B-mode image. This manual step
+makes $\theta$ an operator-dependent source of error, and the $1/\cos\theta$
+factor amplifies that error nonlinearly. At the steep angles routinely used in
+carotid scanning the sensitivity $\mathrm{d}v/\mathrm{d}\theta \propto \tan\theta$
+grows without bound, so a few-degree cursor mistake near
+$\theta\!\to\!\SI{90}{\degree}$ translates into a large velocity error. Carotid
+peak-velocity thresholds feed directly into stenosis grading, so reducing the
+operator dependence of the angle measurement is clinically relevant.
+
+The motivation is not hypothetical. Improper angle correction is repeatedly cited
+among the most common Doppler errors, and as many as \SI{35}{\percent} of vascular
+laboratories applying for accreditation have been flagged for improper
+angle-correction technique~\citep{Saad2008}, a recurring cause of delayed
+accreditation decisions. We note that an image-only angle reader automates the
+operator's cursor placement; it does not establish true flow direction
+independently of the reference reading, a point we return to in
+\S\ref{sec:discussion}.
+
+\subsection{Reading the angle from the image}
+\label{sec:intro:idea}
+
+The angle a sonographer sets is, by construction, the geometric relationship
+between the beam axis and the vessel as it appears on the grayscale B-mode frame.
+That relationship is present in the image itself, which suggests estimating
+$\theta$ directly from a single B-mode image, with no color Doppler overlay and
+no explicit vessel segmentation. Cast this way, angle correction becomes a
+supervised regression problem, and the manual cursor placement is replaced by an
+automated reading that is reproducible across repeats of the same image. The
+ground truth is still the operator-set angle, so the model can be no more accurate
+than its reference labels. The practical difficulty is that clinical carotid
+datasets are small, and learning a continuous geometric quantity from a few dozen
+images is the regime where modern deep networks tend to overfit.
+
+\subsection{Prior work and the present contribution}
+\label{sec:intro:prior}
+
+Automating the Doppler angle is a long-standing goal. Earlier approaches operated
+on \emph{color} flow images with an explicit vessel geometry. Hirsch et al.\
+estimated the vessel orientation by a multi-scale principal-component analysis to
+place the Doppler gate \citep{Hirsch2006}. Saad et al.\ segmented the vessel in
+color-Doppler images and derived the angle from a skeleton of the segmented lumen,
+reporting strong agreement with manual readings \citep{Saad2008}. Both rely on
+color information and a segmentation step, so artifacts in the color-flow image
+propagate into the angle estimate. Deep learning has meanwhile been adopted across
+ultrasound, including fetal standard-plane localization \citep{Chen2015},
+echocardiographic view classification \citep{Madani2018}, and sensorless 3D
+freehand reconstruction \citep{Prevost2018}. This suggests that the geometric cues
+a sonographer uses can be learned directly from the image.
+
+Building on this, Patil and Anand introduced an image-only framing and showed that
+a deep convolutional network could read $\theta$ directly from a \emph{grayscale}
+B-mode carotid image, with no color Doppler and no segmentation, removing the
+manual cursor step \citep{Patil2019}. Because such an estimator uses only the
+formed B-mode image and no knowledge of the vendor-specific signal-processing
+path, it does not depend on a particular color-flow pipeline. We emphasize that
+this is an argument about inputs, not a demonstration of cross-device transfer:
+the data here come from a single source, so any claim of device- or
+vendor-agnostic deployment would have to be tested separately. To cope with data
+scarcity the original study began from a base set of $84$ longitudinal
+common-carotid B-mode images acquired from roughly ten volunteers and enlarged it
+by rotating each image over $[-60,60]\si{\degree}$ in \SI{5}{\degree} increments.
+This produces $25$ oriented views per image and a working corpus of about
+$2{,}100$ examples. The known rotation supplies an \emph{exact} angle label for
+every view, so the augmentation is self-labelling, which is rare for a regression
+target. On this corpus a frozen ImageNet backbone \citep{Deng2009} with a
+lightweight regression head, used purely as a fixed feature extractor in the
+standard transfer-learning manner, reached single-digit errors; the best reported
+configuration achieved roughly \SI{2.87}{\degree} mean absolute error (MAE) and
+\SI{4.03}{\percent} mean absolute percentage error (MAPE).
+
+This paper treats Doppler-angle estimation as an engineering target and asks how
+far a reproducible, frozen-transfer estimator can be pushed on the same data. We
+reproduce the original pipeline and identify the design choice that makes it work,
+tune and ensemble the estimator under two sampling protocols, run an architecture
+comparison, and evaluate the estimator with calibrated uncertainty and a classical
+baseline.
+
+There is no single correct way to score accuracy on a small, heavily augmented
+cohort, so we report two sampling protocols. \emph{Image-level sampling} is the
+original study's protocol: the $\sim\!2{,}100$ rotated views are partitioned into
+train and test at the image level, so the resulting error measures accuracy across
+the population of orientations and imaging conditions the augmentation spans.
+\emph{Patient-level sampling} holds out whole volunteers (grouped
+cross-validation), so it measures generalization to a previously unseen patient.
+The two answer different questions, and the patient-level number is higher because
+cross-subject transfer on $\sim\!10$ volunteers is intrinsically harder. We tune
+each protocol to its own best and report both. With only about ten volunteers,
+grouped five-fold cross-validation holds out roughly two volunteers per fold, so
+the patient-level estimates carry large fold-to-fold variance and the point
+estimates below should be read accordingly. We report the per-fold spread in
+\S\ref{sec:results}. The image-to-patient gap quantifies how much of the
+within-population accuracy is anatomy-specific
+(\S\ref{sec:methods}, \S\ref{sec:discussion}).
+
+\paragraph{Faithful, reproducible replication.}
+We first reproduce the original protocol end to end on a modern, fully scripted
+stack (Keras\,3 / JAX, fixed seed). A frozen DenseNet201 backbone
+\citep{Huang2017} with an orientation-preserving \emph{grid-pooling} head reaches
+\SI{5.84}{\percent} MAPE (\SI{3.77}{\degree} MAE, $R^2=0.982$) under image-level
+sampling, on the original single augmented split and without any fine-tuning
+(Table~\ref{tab:replication}).
+
+\paragraph{The pooling layer.}
+That replication hinges on the pooling layer. Conventional global average pooling
+(GAP) averages the convolutional feature map over all spatial positions, which is
+approximately rotation-invariant. That is the wrong inductive bias when the target
+\emph{is} an orientation. Grid pooling instead average-pools the feature map to a
+small $G\times G$ grid and flattens it, preserving coarse spatial layout. On the
+same frozen DenseNet201 this roughly halves the error under image-level five-fold
+cross-validation, from \SI{10.85}{\percent} to \SI{4.58}{\percent} MAPE; the
+original single augmented split, scored separately, reaches \SI{5.84}{\percent}
+MAPE (\SI{3.77}{\degree} MAE) (Table~\ref{tab:replication}). The two figures use
+different aggregation schemes (a cross-validation mean versus a single held-out
+split) and are not directly comparable. The reading is the same in both: the
+frozen backbone already encodes vessel orientation, and the gain comes from not
+pooling it away.
+
+\paragraph{Per-protocol tuning and ensembling.}
+We tune the regression head (depth, width, dropout, $L_2$, batch normalization,
+learning rate, batch size, patience) with the Optuna TPE sampler
+\citep{Akiba2019,Bergstra2011}, scoring each protocol on its own five-fold
+cross-validation over cached frozen features. One feature extraction per backbone
+serves both protocols. We then combine five tuned backbones into mean and stacked
+\citep{Wolpert1992} ensembles over out-of-fold predictions
+(Table~\ref{tab:dual_protocol}). The stacked ensemble is the strongest estimator
+under both protocols: \SI{2.79}{\percent} MAPE (\SI{1.96}{\degree} MAE,
+$R^2=0.995$) image-level and \SI{8.53}{\percent} MAPE (\SI{5.93}{\degree} MAE,
+$R^2=0.952$) patient-level. These ensemble figures pool out-of-fold predictions
+before scoring, rather than averaging per-fold scores, so they are not a strict
+cross-validation mean and stacking on out-of-fold predictions can be mildly
+optimistic; we keep the distinction in view when comparing them to the replication
+numbers. A single tuned DenseNet201 reaches \SI{3.00}{\degree} MAE and
+\SI{4.03}{\percent} MAPE, close to the prior best of \SI{2.87}{\degree} MAE and
+slightly worse on MAE. The ensemble improves on this and also reports the
+previously unmeasured patient-level number.
+
+\paragraph{Architecture comparison.}
+Larger and newer encoders are often assumed to be better, so we compare frozen
+classic and modern ImageNet backbones under patient-level five-fold
+cross-validation (Fig.~\ref{fig:bakeoff}). On the extraction-matched comparison,
+frozen DenseNet201 \citep{Huang2017} leads at \SI{14.1}{\percent} MAPE, ahead of
+the best modern encoder, ConvNeXt-Base \citep{Liu2022} (\SI{15.7}{\percent}), with
+EfficientNet/EfficientNetV2 \citep{Tan2019} trailing at
+\SIrange{17}{21}{\percent}. With only $84$ base images, no newer or larger backbone
+improves on a frozen 2017 DenseNet201, which we carry forward.
+
+\paragraph{Clinical-grade evaluation.}
+Finally we report uncertainty and agreement in clinically legible terms.
+Split-conformal prediction \citep{Vovk2005,Lei2018} on a patient-disjoint
+calibration split yields \SI{90}{\percent} intervals of $\pm\SI{20.50}{\degree}$,
+with empirical coverage of \SI{95.2}{\percent} on the held-out test set. Conformal
+prediction guarantees marginal coverage in expectation over calibration draws, not
+the realized coverage on one split. With only $\sim\!10$ volunteers a single split
+gives a coverage estimate with wide binomial uncertainty, and the realized
+\SI{95.2}{\percent} sits above the \SI{90}{\percent} target, so the intervals are
+on the conservative side here.
+
+A Bland--Altman analysis \citep{BlandAltman1986} reports a $-\SI{4.31}{\degree}$
+bias (method minus reference: the model reads slightly low) with limits of
+agreement $[-24.25,\,+15.63]\si{\degree}$. This compares the method against the
+\emph{single} reference reading available per image, so it is method-vs-reference
+agreement rather than an inter-observer study, and the limits combine model error
+with reference noise that we cannot separately estimate. The bias is directional,
+which would mean a systematic rather than random velocity offset; we discuss its
+clinical implication in \S\ref{sec:discussion}.
+
+The headline image-level numbers are computed over the rotation-augmented
+population. On real unrotated base images the MAE is \SI{7.80}{\degree}, and
+rotation test-time augmentation nearly halves it to \SI{4.72}{\degree} MAE
+(circular-median over rotations). We foreground this base-image figure as the most
+clinically relevant per-image performance. Grad-CAM \citep{Selvaraju2017} is
+consistent with the network attending to the vessel wall. As a check on the
+learned representation, a classical, image-only structure-tensor angle prior
+reaches \SI{3.16}{\degree} MAE on the narrow base-angle band, and a circular
+($2\theta$) fusion of the learned and classical estimates reaches
+\SI{2.72}{\degree} MAE, improving on either alone on this point estimate. We read
+the fusion gain as suggestive of partly complementary cues, pending the variance
+analysis in \S\ref{sec:results}.
+
+\subsection{Contributions}
+\label{sec:intro:contrib}
+
+In summary, this paper makes the following contributions.
+%
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{A faithful, fully scripted replication.} We reproduce the prior
+  pipeline (\SI{5.84}{\percent} MAPE, frozen DenseNet201) and isolate the design
+  choice that makes it work: an orientation-preserving grid-pooling head in place
+  of global average pooling, so that a frozen backbone retains the orientation
+  signal the target depends on.
+  \item \textbf{The strongest estimator we measured, under two protocols.} Via
+  per-protocol Optuna head tuning and a five-model ensemble we report
+  \SI{2.79}{\percent} MAPE (\SI{1.96}{\degree} MAE) under image-level sampling and
+  \SI{8.53}{\percent} MAPE (\SI{5.93}{\degree} MAE) under the stricter
+  patient-level sampling, each tuned to its own best, alongside the previously
+  unmeasured cross-subject number.
+  \item \textbf{An architecture comparison.} A frozen DenseNet201 outperforms newer
+  ConvNeXt and EfficientNet/EfficientNetV2 backbones, indicating that newer is not
+  necessarily better for small-data frozen transfer on this task.
+  \item \textbf{A calibrated clinical-grade evaluation.} We provide conformal
+  prediction intervals, a method-vs-reference Bland--Altman analysis stated with
+  its single-reference caveat, rotation test-time augmentation, and Grad-CAM
+  attribution, plus a classical structure-tensor prior whose circular fusion with
+  the learned model reaches \SI{2.72}{\degree} MAE.
+\end{itemize}

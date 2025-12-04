@@ -1,0 +1,49 @@
+% Estimator architecture: frozen backbone -> orientation-preserving grid pooling
+% -> shallow regression head -> angle. Self-contained TikZ (needs tikz +
+% arrows.meta, positioning libraries, loaded in the preamble).
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[
+  font=\small,
+  >={Stealth[length=2.2mm]},
+  every node/.style={align=center},
+  box/.style={draw, rounded corners=2pt, minimum height=11mm, minimum width=17mm, fill=blue!4},
+  frozen/.style={box, fill=black!8},
+  pool/.style={box, fill=orange!16},
+  head/.style={box, fill=green!8},
+  io/.style={box, fill=blue!10, minimum width=13mm},
+  node distance=7mm,
+]
+  \node[io]      (img)  {B-mode\\image\\$H{\times}W$};
+  \node[frozen, right=of img]  (bb)  {frozen ImageNet\\backbone\\\texttt{include\_top=False}};
+  \node[box,    right=of bb]   (fmap){conv map\\$h{\times}w{\times}c$};
+  \node[pool,   right=of fmap] (grid){\textbf{grid pool}\\$G{\times}G$};
+  \node[box,    right=of grid] (flat){flatten\\$G^2c$};
+  \node[head,   right=of flat] (head){BN\,$\to$\,Dense\\$\to$\,ReLU\,$\to$\,Drop\\$\to$\,Dense};
+  \node[io,     right=of head] (out) {$\hat\theta$\\(degrees)};
+
+  \draw[->] (img)--(bb); \draw[->] (bb)--(fmap); \draw[->] (fmap)--(grid);
+  \draw[->] (grid)--(flat); \draw[->] (flat)--(head); \draw[->] (head)--(out);
+
+  % the load-bearing contrast, annotated under the pooling stage
+  \node[below=5mm of grid, text width=42mm, font=\footnotesize] (note)
+       {keeps coarse spatial layout\\($G{\times}G$, orientation-aware)\\[1pt]
+        \emph{vs} global avg-pool: $1{\times}1$,\\approximately rotation-invariant};
+  \draw[->, dashed, gray] (note) -- (grid);
+
+  \begin{scope}[on background layer]
+    \node[draw=black!25, dashed, rounded corners, fit=(bb)(fmap), inner sep=2.5mm,
+          label=above:{frozen feature extractor}] {};
+    \node[draw=black!25, dashed, rounded corners, fit=(grid)(flat)(head), inner sep=2.5mm,
+          label=above:{trained head}] {};
+  \end{scope}
+\end{tikzpicture}}
+\caption{Estimator architecture. A frozen ImageNet backbone produces a
+convolutional feature map; \textbf{orientation-preserving grid pooling} averages
+that map to a small $G{\times}G$ grid (rather than a single $1{\times}1$ vector)
+so the coarse spatial layout that encodes vessel orientation survives. The
+flattened grid feeds a shallow regression head that outputs the Doppler angle
+$\hat\theta$. Only the head is trained.}
+\label{fig:architecture}
+\end{figure}

@@ -1,0 +1,96 @@
+\documentclass{article}
+
+% natbib options must be passed before neurips_2025 loads it.
+\PassOptionsToPackage{numbers,sort&compress}{natbib}
+
+% "preprint" = publicly posted, non-anonymous version with authors shown.
+% (Use \usepackage{neurips_2025} for the anonymous double-blind submission, or
+%  \usepackage[final]{neurips_2025} for the camera-ready.)
+\usepackage[preprint]{neurips_2025}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{nicefrac}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{enumitem}
+\usepackage{placeins}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,backgrounds,calc,shapes.geometric}
+
+% Figures (PNGs + the TikZ \input diagrams) live in figures/.
+\graphicspath{{figures/}{./figures/}}
+
+% Convenience macros used by the section sources.
+\newcommand{\degr}{\ensuremath{^\circ}}
+\newcommand{\fd}{\ensuremath{f_d}}
+\newcommand{\theref}{\ensuremath{\theta}}
+
+\title{Automated Ultrasound Doppler Angle Estimation Using Deep Learning}
+
+\author{%
+  Nilesh Patil \\
+  Goergen Institute for Data Science\\
+  University of Rochester Medical Center\\
+  University of Rochester\\
+  Rochester, NY, USA \\
+  \And
+  Ajay Anand \\
+  Goergen Institute for Data Science\\
+  University of Rochester\\
+  Rochester, NY, USA \\
+}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+The Doppler angle $\theta$, measured between the ultrasound beam and the
+blood-flow direction, enters the Doppler equation through $\cos\theta$, so an
+error in $\theta$ propagates into the estimated blood-flow velocity, and the
+propagation is severe as $\theta$ approaches \SI{90}{\degree}. Patil and Anand
+(EMBC 2019) proposed estimating this angle from B-mode carotid images with a
+deep convolutional network. We replicate that pipeline and isolate the design
+choice it depends on. Standard global average pooling is approximately
+rotation-invariant and discards the orientation signal the target encodes; an
+orientation-preserving grid-pooling head lifts a frozen DenseNet201 backbone to
+\SI{5.84}{\percent} mean absolute percentage error (MAPE). We then tune the
+regression head with the Optuna TPE sampler and ensemble five backbones. We
+report pooled out-of-fold metrics under two sampling protocols. Image-level
+sampling over the rotation-augmented corpus reaches \SI{2.79}{\percent} MAPE
+(\SI{1.96}{\degree} MAE, $R^2=0.995$); patient-level sampling, which holds out
+whole volunteers, reaches \SI{8.53}{\percent} MAPE (\SI{5.93}{\degree} MAE,
+$R^2=0.952$). On this small, narrow-domain task DenseNet201 outperforms
+ConvNeXt and EfficientNet backbones. Split-conformal \SI{90}{\percent}
+prediction intervals span $\pm$\SI{20.5}{\degree}. Bland--Altman analysis
+against the single reference reading gives a \SI{-4.3}{\degree} bias with
+\SI{95}{\percent} limits of agreement $-24.25$ to $+\SI{15.63}{\degree}$
+(method-vs-reference, not inter-observer). Rotation test-time augmentation
+roughly halves the base-image error, and circular fusion with a structure-tensor
+angle prior reaches \SI{2.72}{\degree} MAE. Tables and figures are regenerated
+from code.
+\end{abstract}
+
+\input{sections/intro}
+\FloatBarrier
+\input{sections/methods}
+\FloatBarrier
+\input{sections/results}
+\FloatBarrier
+\input{sections/evaluation}
+\FloatBarrier
+\input{sections/discussion}
+\FloatBarrier
+
+\bibliographystyle{plainnat}
+\bibliography{refs}
+
+\end{document}

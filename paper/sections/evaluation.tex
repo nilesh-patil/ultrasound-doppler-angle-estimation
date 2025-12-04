@@ -1,0 +1,76 @@
+\section{Clinical-Grade Evaluation}
+\label{sec:evaluation}
+
+A point estimate of the Doppler angle is, on its own, of limited clinical use. The velocity correction scales as $1/\cos\theta$, so its sensitivity to angular error, $\partial(1/\cos\theta)/\partial\theta = \tan\theta/\cos\theta$, grows steeply toward the high angles used in carotid insonation. A sonographer therefore needs more than a predicted $\theta$: a calibrated sense of how far to trust it, and a check on whether the predictor sits systematically off the reading it is meant to assist. We address this with five analyses: distribution-free prediction intervals, agreement with the reference reading, rotation test-time augmentation, a classical orientation prior with learned--classical fusion, and gradient attribution. To describe the harder of the two sampling protocols of Section~\ref{sec:results}, all five are built on the \emph{patient-level} out-of-fold (OOF) predictions of the Optuna-tuned DenseNet201, with every volunteer-proxy group held out exactly once. Each number is recomputed from the saved predictions in \texttt{results/predictions/} by the \texttt{uda} evaluation modules. Table~\ref{tab:clinical} collects the headline values.
+
+\input{tables/clinical}
+
+\subsection{Distribution-free prediction intervals via conformal calibration}
+\label{sec:conformal}
+
+To attach a calibrated uncertainty to each prediction we use split-conformal prediction \citep{Vovk2005,Lei2018}, which turns any point predictor into interval estimates with no distributional assumptions. Residuals are scored on the signed, $180\degr$-wrapped scale appropriate to an orientation target. We take the $(1-\alpha)$ empirical quantile $q$ of the absolute residuals on a calibration set and emit the interval $\hat{\theta}\pm q$. The calibration and test halves are drawn to be patient-disjoint, a group-holdout split of $900$ calibration rows and $1{,}200$ held-out test rows in which no volunteer-proxy group spans both. Standard split-conformal coverage assumes exchangeable calibration and test points; a group-disjoint split breaks point-level exchangeability across the group boundary, so the relevant guarantee is the weaker group-conformal one, which holds at the level of groups and degrades when groups are few. With roughly six calibration groups here, the empirical quantile $q$ carries substantial sampling variance, and the coverage we report is one realization of a single seed-42 split rather than an average over folds.
+
+On that split, empirical coverage meets or exceeds the nominal level at every miscoverage $\alpha$ we sweep. A nominal $90\%$ interval has half-width $\pm\SI{20.50}{\degree}$ and attains $95.2\%$ empirical coverage; a nominal $95\%$ interval ($\pm\SI{26.03}{\degree}$) reaches $97.8\%$. The over-coverage is the expected conservative behavior of group-conformal calibration on a small cohort (\num{12} patient-proxy groups), and because residuals live on the wrapped scale the half-widths never approach the $90\degr$ ceiling. Figure~\ref{fig:calibration} plots empirical against nominal coverage relative to the $y=x$ diagonal; the curve lies on or above the diagonal at the four levels swept. We read this as consistent with valid coverage on this split, not as a finite-sample proof: a single cal/test partition over six groups is one high-variance draw, and a different split could under-cover. We did not repeat the split, so the conformal result is held to a weaker standard than the patient-level cross-validation elsewhere in the paper, which reports $\pm1$~SD across folds.
+
+One further caveat governs how the width should be read. The conformal residuals are scored over the rotated-view OOF set, whose effective sample size is closer to the handful of base images per group than to the $1{,}200$ row count, since the views are geometrically coupled copies (Section~\ref{sec:methods}). The interval is also built on the rotated-view residual distribution, whereas the headline accuracy reported below (Sections~\ref{sec:tta} and \ref{sec:fusion}) is a de-rotated, base-image quantity; the two are not on the same evaluation footing and should not be juxtaposed as a single number. With those limits stated, a $\pm\SI{20}{\degree}$ band under patient-level sampling is more informative than a bare point estimate, though at the steep insonation angles of Section~\ref{sec:intro} a band of this width propagates through $1/\cos\theta$ into a velocity-correction uncertainty of tens of percent, which we do not claim to have resolved.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.62\linewidth]{figure_calibration.png}
+  \caption{Conformal calibration on a single patient-disjoint calibration/test split:
+  empirical coverage versus the nominal level, against the $y=x$ diagonal. The
+  curve lies on or above the diagonal at every miscoverage level, consistent with
+  valid coverage on this split; with only $\sim$six calibration groups, the
+  empirical quantile carries large sampling variance and the result is not
+  averaged over repeated splits.}
+  \label{fig:calibration}
+\end{figure}
+
+\subsection{Agreement with the reference reading (Bland--Altman)}
+\label{sec:bland_altman}
+
+To characterize systematic disagreement separately from aggregate error, we use a Bland--Altman analysis \citep{BlandAltman1986}, plotting the signed (wrapped) difference \emph{method minus reference} ($\theta_{\text{pred}}-\theta_{\text{true}}$) against their mean. Over the $2{,}100$ OOF predictions the model carries a small negative bias of $-\SI{4.31}{\degree}$ (it reads slightly lower than the reference) with $95\%$ limits of agreement of $-24.25$ to $+\SI{15.63}{\degree}$. These pooled limits treat the \num{25} coupled rotations of each base image as independent, so they are optimistically narrow; a repeated-measures correction would widen them. Aggregating each of the $n=12$ patient-proxy groups to a single value by a double-angle circular mean gives a comparable $-\SI{4.56}{\degree}$ bias with tighter limits, as the per-image scatter averages down. Figure~\ref{fig:bland_altman} shows no visible trend of the difference with the mean angle. We did not fit the regression of difference on mean (the standard proportional-bias test), so the constant-offset reading is a visual one rather than a quantified slope.
+
+What this reference is matters for how the bias is interpreted. There is exactly one human reading per base image, the angle drawn in the MATLAB GUI, but the OOF residuals are scored against the applied-rotation label that defines each augmented view (Section~\ref{sec:methods}). The comparison is therefore method-vs-reference against a geometric construct, not an inter-observer study against a sonographer's clinical Doppler angle: there is one method (the model), one reference, no second annotator, and no repeated readings, so model error and the unmeasured variability of the human pipeline cannot be separated. The $-\SI{4.3}{\degree}$ bias should be read as the model's offset relative to that single annotation pipeline. Whether a constant $-\SI{4.3}{\degree}$ offset is benign for downstream velocity depends on the operating angle through the same $1/\cos\theta$ sensitivity, which we do not evaluate here. Acquiring repeated, multi-reader annotations to promote this into a genuine inter-observer analysis is the natural next step, and we record it as a limitation.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.7\linewidth]{figure_bland_altman.png}
+  \caption{Bland--Altman agreement between the tuned model and the single
+  reference reading, with mean bias and $95\%$ limits of agreement. This is a
+  method-vs-reference comparison (one reading per image), not an inter-observer
+  study. The $95\%$ limits are pooled over geometrically coupled rotated views and
+  are therefore optimistically narrow.}
+  \label{fig:bland_altman}
+\end{figure}
+
+\subsection{Rotation test-time augmentation}
+\label{sec:tta}
+
+The orientation target invites a symmetry-aware test-time augmentation (TTA). Each of the 84 base images is presented at its 25 rotated views, every prediction is de-rotated back into the base frame, and the de-rotated estimates are reduced circularly, respecting the $180\degr$ period so that the reduction is seam-safe. Without TTA the base-image MAE is $\SI{7.80}{\degree}$ (RMSE $\SI{11.05}{\degree}$). A circular-mean reduction lowers it to $\SI{5.31}{\degree}$, and a circular-median reduction, the most robust of the three, reaches $\SI{4.72}{\degree}$ (RMSE $\SI{6.27}{\degree}$), a $39.5\%$ reduction in MAE at no training cost. The median is insensitive to the occasional badly oriented view, a useful safeguard in deployment. TTA composes with the conformal intervals of Section~\ref{sec:conformal}, sharpening the point estimate the intervals are wrapped around, though we note again that the TTA accuracy is a base-image quantity while the conformal width is computed over rotated views.
+
+\subsection{A classical orientation prior and learned--classical fusion}
+\label{sec:fusion}
+
+We also situate the learned predictor against a purely classical baseline. A structure-tensor estimate of the dominant local orientation, a hand-built prior with no learning, reaches a base-image MAE of $\SI{3.16}{\degree}$. This figure is measured on the narrow native angle band of the 84 base images, a smaller-support and easier problem than the $\pm\num{60}\,\si{\degree}$ augmented range over which the conformal and Bland--Altman residuals are scored, so the numbers are not directly comparable. It does confirm that a usable geometric signal lives in the vessel-wall texture. Fusing the learned and classical estimates with a circular ($2\theta$, orientation-aware) combination reaches $\SI{2.72}{\degree}$ MAE. The fusion uses inverse-error weights; these were computed on the same 84 base images on which the fused estimate is scored, so the $\SI{2.72}{\degree}$ figure is in-sample and not a held-out result, and we report it as such pending a nested out-of-fold estimate. A fused estimate that beats both members is consistent with partly complementary error sources, but in-sample weight fitting and regression toward the mean of two correlated estimators can produce the same effect, so we do not claim more than that the two estimators carry some independent signal.
+
+\subsection{Where the network looks (Grad-CAM)}
+\label{sec:gradcam}
+
+To check whether the predictor keys on anatomy rather than acquisition artifacts, we compute Grad-CAM saliency maps \citep{Selvaraju2017} for the DenseNet201 backbone. Figure~\ref{fig:gradcam} shows, across three example frames, saliency that tends to overlap the mid-image vessel band, the wall interfaces the structure-tensor prior of Section~\ref{sec:fusion} exploits, rather than the image borders or depth markers. The saliency is diffuse rather than a pixel-thin trace of the wall, as expected for the coarse $\sim\!8\times8$ feature grid of a frozen backbone, and in places it also lights up near-vessel tissue. This is anecdotal evidence from three frames on a coarse grid, so we read it cautiously: it shows where activation concentrates, which is on the vessel region, but it does not directly establish that the model encodes the orientation of the vessel boundary. The pattern is at least consistent with the model using the anatomical cue, and it is the reason the orientation-preserving grid-pooling head of Section~\ref{sec:methods} matters, since a rotation-invariant global pooling would discard the spatial layout this map makes visible.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\linewidth]{gradcam_montage.png}
+  \caption{Grad-CAM attribution for the DenseNet201 backbone across three example
+  frames (saliency normalized $0$--$1$; warm = high). In each frame the saliency
+  concentrates on the vessel region rather than on speckle or image borders, and is
+  diffuse rather than a pixel-thin trace of the wall, as expected for a coarse
+  frozen feature grid. The evidence is illustrative from three frames, not a
+  cohort-level attribution study.}
+  \label{fig:gradcam}
+\end{figure}
+
+\subsection{Summary}
+
+These analyses give the patient-level estimator a partial clinical profile, with the caveats above attached to each piece. The conformal intervals show coverage at or above nominal on one patient-disjoint split, but on a single high-variance realization rather than a repeated-split estimate. The Bland--Altman bias is small ($-\SI{4.31}{\degree}$) and shows no obvious angle dependence by eye, against a single geometric reference rather than a second reader. The training-free TTA cuts base-image MAE by $39.5\%$, and an inverse-error fusion of the network with a classical prior reaches $\SI{2.72}{\degree}$ MAE in-sample. The attribution maps locate activation on the vessel region. The cohort is 84 images from $\sim\!10$ healthy young volunteers at a single center, with synthetic rotation labels and patient groups recovered from acquisition-time clustering rather than true subject IDs, so none of these results constitute external, multi-site, or pathology-validated evidence. End-to-end fine-tuning, transformer and medical foundation backbones, and self-supervised pretraining were beyond the Apple-silicon hardware used here; we report what we ran.

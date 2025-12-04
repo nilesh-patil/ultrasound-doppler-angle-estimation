@@ -1,0 +1,52 @@
+% End-to-end experiment pipeline: data -> augmentation -> two sampling protocols
+% -> cached frozen features -> per-protocol Optuna tuning -> ensemble -> evaluation.
+% Self-contained TikZ (needs tikz + arrows.meta, positioning, fit libraries).
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[
+  font=\small,
+  >={Stealth[length=2.2mm]},
+  every node/.style={align=center},
+  stage/.style={draw, rounded corners=2pt, minimum height=11mm, minimum width=20mm, fill=blue!5},
+  data/.style={stage, fill=black!7},
+  proto/.style={draw, rounded corners=2pt, minimum height=7mm, minimum width=24mm, fill=orange!14, font=\footnotesize},
+  eval/.style={stage, fill=green!8, minimum width=24mm},
+  node distance=8mm and 10mm,
+]
+  \node[data]  (raw)  {84 base\\images};
+  \node[stage, right=of raw]  (aug)  {augment\\$\pm60^\circ/5^\circ$ + CLAHE};
+  \node[stage, right=of aug]  (corp) {2{,}100-image\\corpus};
+  \node[stage, right=of corp] (feat) {cached frozen\\features\\(1 / backbone)};
+  \node[stage, right=of feat] (tune) {Optuna TPE\\tuning\\(per protocol)};
+  \node[stage, right=of tune] (ens)  {5-backbone\\ensemble\\mean / stacked};
+  \node[eval,  right=of ens]  (ev)   {evaluation};
+
+  \draw[->] (raw)--(aug); \draw[->] (aug)--(corp); \draw[->] (corp)--(feat);
+  \draw[->] (feat)--(tune); \draw[->] (tune)--(ens); \draw[->] (ens)--(ev);
+
+  % the two sampling protocols feed the CV that scores tuning
+  \node[proto, above=8mm of tune] (pimg) {image-level (random)};
+  \node[proto, below=8mm of tune] (ppat) {patient-level (GroupKFold)};
+  \draw[->, dashed, gray] (pimg) -- (tune);
+  \draw[->, dashed, gray] (ppat) -- (tune);
+
+  % what evaluation comprises
+  \node[below=7mm of ev, text width=30mm, font=\footnotesize] (evlist)
+       {conformal intervals,\\Bland--Altman, TTA,\\Grad-CAM,\\structure-tensor fusion};
+  \draw[->, dashed, gray] (ev) -- (evlist);
+
+  \begin{scope}[on background layer]
+    \node[draw=black!25, dashed, rounded corners, fit=(pimg)(ppat),
+          inner sep=2mm, label=left:{\footnotesize two protocols}] {};
+  \end{scope}
+\end{tikzpicture}}
+\caption{Experiment pipeline. The 84 base images are expanded by a deterministic
+rotation sweep (with CLAHE) into a $\sim$2{,}100-image corpus. Each backbone's
+frozen features are extracted once and cached, then scored under \emph{two
+complementary sampling protocols} - image-level (random) and patient-level
+(grouped by volunteer) - with per-protocol Optuna TPE tuning of the head. The
+five tuned backbones are combined (mean or stacked ensemble) and assessed with a
+clinical-grade evaluation suite.}
+\label{fig:pipeline}
+\end{figure}

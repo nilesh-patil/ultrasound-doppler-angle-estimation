@@ -1,0 +1,51 @@
+% Doppler-angle convention: theta is the angle between the image's vertical axis
+% (the ultrasound beam direction) and the vessel long axis, theta in [0,180].
+% Self-contained TikZ (needs tikz + arrows.meta, already loaded in the preamble).
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  font=\small,
+  >={Stealth[length=2.4mm]},
+  axis/.style={->, blue!55!black, line width=1.0pt},
+  vessel/.style={line width=8pt, gray!30, line cap=round},
+]
+  % image frame
+  \draw[gray!40, rounded corners=1pt] (-2.8,-2.5) rectangle (3.0,2.5);
+  \node[gray!60, font=\footnotesize] at (1.75,-2.25) {B-mode frame};
+
+  % the vessel as an undirected line at angle theta from the vertical
+  \def\thetadeg{58}
+  \draw[vessel] ({-2.4*sin(\thetadeg)},{-2.4*cos(\thetadeg)})
+             -- ({2.4*sin(\thetadeg)},{2.4*cos(\thetadeg)});
+  \draw[black, line width=0.9pt]
+       ({-2.4*sin(\thetadeg)},{-2.4*cos(\thetadeg)})
+    -- ({2.4*sin(\thetadeg)},{2.4*cos(\thetadeg)});
+  \node[font=\footnotesize, anchor=south west]
+       at ({2.0*sin(\thetadeg)},{2.0*cos(\thetadeg)}) {vessel wall};
+  % faint flow arrow along the vessel (direction-agnostic; theta is undirected)
+  \draw[->, red!55!black, line width=0.9pt]
+       (0,0) -- ({1.15*sin(\thetadeg)},{1.15*cos(\thetadeg)});
+  \node[red!55!black, font=\footnotesize]
+       at ({1.15*sin(\thetadeg)+0.35},{1.15*cos(\thetadeg)-0.12}) {flow};
+
+  % beam axis = image vertical, through the same intersection
+  \draw[axis] (0,2.45) -- (0,-2.45);
+  \node[blue!55!black, font=\footnotesize, anchor=south east] at (-0.12,1.9)
+       {beam axis};
+  \node[blue!55!black, font=\footnotesize, anchor=north east] at (-0.12,1.88)
+       {(image vertical)};
+
+  % theta: the angle between the upward vertical and the vessel (upper-right ray)
+  \draw[->, black, line width=0.9pt]
+       (0,1.0) arc[start angle=90, end angle={90-\thetadeg}, radius=1.0];
+  \node at ({0.62*sin(\thetadeg/2)},{0.62*cos(\thetadeg/2)+0.32}) {$\theta$};
+\end{tikzpicture}
+\caption{Doppler-angle convention. The Doppler angle $\theta$ is the angle
+between the ultrasound beam (the image's vertical axis) and the vessel long axis,
+read off a single B-mode frame by aligning a line with the vessel wall and
+measuring its inclination to the vertical; $\theta$ ranges over
+$[0,\SI{180}{\degree}]$ and is direction-agnostic. The recovered velocity scales
+as $1/\cos\theta$, so the accuracy of this angle directly controls the accuracy of
+the reported velocity.}
+\label{fig:angle_convention}
+\end{figure}
