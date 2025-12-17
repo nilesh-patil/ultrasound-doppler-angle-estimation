@@ -10,3 +10,6 @@
 *.pdf
 *.synctex.gz
 *.toc
+
+# the compiled manuscript is tracked
+!main.pdf

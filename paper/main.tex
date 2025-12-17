@@ -1,5 +1,8 @@
 \documentclass{article}
 
+% Reproducible build: keep the pdfTeX/system banner out of the PDF metadata.
+\ifdefined\pdfsuppressptexinfo\pdfsuppressptexinfo=-1\fi
+
 % natbib options must be passed before neurips_2025 loads it.
 \PassOptionsToPackage{numbers,sort&compress}{natbib}
 
@@ -51,6 +54,16 @@
 
 \begin{document}
 \maketitle
+
+\begin{center}
+\vspace{-0.8em}
+\fbox{\parbox{0.92\linewidth}{\centering\small\itshape
+A preliminary version of this work was published in the Proceedings of the IEEE
+Engineering in Medicine and Biology Society Conference (EMBC), 2019~\cite{Patil2019}.
+This article extends it with dual-protocol evaluation, Optuna head tuning, a
+five-backbone ensemble, and a clinical-grade evaluation suite.}}
+\vspace{0.6em}
+\end{center}
 
 \begin{abstract}
 The Doppler angle $\theta$, measured between the ultrasound beam and the
