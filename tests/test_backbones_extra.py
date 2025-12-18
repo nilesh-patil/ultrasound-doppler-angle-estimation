@@ -42,7 +42,7 @@ EXPECTED_NATIVE: dict[str, tuple[int, int]] = {
     "cnn_scratch": (128, 128),
 }
 
-#: All nine backbones once the feature lands (legacy five + new five minus the
+#: All nine backbones (legacy five + new five minus the
 #: one already-counted scratch). Derived from the registry so the build test
 #: also exercises the legacy entries staying intact.
 ALL_NAMES = list(EXPECTED_NATIVE) + ["vgg19", "resnet50", "densenet201"]

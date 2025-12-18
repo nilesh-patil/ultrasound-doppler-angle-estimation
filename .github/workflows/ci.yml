@@ -17,4 +17,3 @@ jobs:
           cache: true
       - name: Run test suite
         run: pixi run -e default test
-      # `smoke` (tiny-subset train) is added to this job once the model code lands.

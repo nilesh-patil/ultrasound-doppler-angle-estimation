@@ -38,7 +38,7 @@ The tuned ensemble **reproduces and improves on** the original paper's best sing
 model (≈ 4.03 % MAPE / 2.87° MAE, image-level), and additionally reports the
 previously-unmeasured patient-level (cross-subject) number. Clinical-grade
 evaluation adds split-conformal 90 % intervals of ±20.5° (valid empirical
-coverage), a Bland–Altman method-vs-reference analysis (+4.3° bias), and
+coverage), a Bland–Altman method-vs-reference analysis (−4.3° bias), and
 rotation test-time augmentation that nearly halves the base-image error.
 
 ## Two sampling protocols
@@ -75,7 +75,7 @@ of a thin abstraction layer over JAX.
 ```bash
 pixi install            # solve + install the default (JAX-CPU) env
 pixi run test           # run the test suite
-pixi run all            # labels → augment → 5-backbone replicate → figures
+pixi run all            # labels → 5-backbone replication
 ```
 
 ## Project layout
@@ -102,7 +102,7 @@ docs/               # analysis.md — the results & comparative-analysis narrati
 
 ```bash
 pixi install
-pixi run all                                                     # replicate → figures
+pixi run all                                                     # labels → 5-backbone replication
 pixi run python scripts/run_tuning.py --protocol both --trials 20 --k 5
 pixi run python scripts/oof_ensemble.py --protocol image
 pixi run python scripts/oof_ensemble.py --protocol patient
