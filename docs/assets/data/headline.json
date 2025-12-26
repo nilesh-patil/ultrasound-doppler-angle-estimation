@@ -1,0 +1,21 @@
+{
+  "image_level": {
+    "mape": 2.79,
+    "mae": 1.96,
+    "r2": 0.995
+  },
+  "patient_level": {
+    "mape": 8.53,
+    "mae": 5.93,
+    "r2": 0.952
+  },
+  "paper_best": {
+    "mae": 2.87,
+    "mape": 4.03
+  },
+  "single_tuned_densenet201_image": {
+    "mae": 3.0,
+    "mape": 4.03,
+    "r2": 0.988
+  }
+}

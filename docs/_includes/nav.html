@@ -1,0 +1,21 @@
+{%- comment -%}
+  Primary navigation. Five pages in fixed order; active page flagged via page.nav,
+  marked with aria-current="page" and a non-color .is-current underline cue.
+{%- endcomment -%}
+<nav class="site-nav" aria-label="Primary">
+  {%- assign items = "overview,method,results,clinical,reproduce" | split: "," -%}
+  {%- for item in items -%}
+    {%- case item -%}
+      {%- when "overview" -%}{%- assign href = "/" -%}{%- assign label = "Overview" -%}
+      {%- when "method"   -%}{%- assign href = "/method/" -%}{%- assign label = "Method" -%}
+      {%- when "results"  -%}{%- assign href = "/results/" -%}{%- assign label = "Results" -%}
+      {%- when "clinical" -%}{%- assign href = "/clinical/" -%}{%- assign label = "Clinical" -%}
+      {%- when "reproduce"-%}{%- assign href = "/reproduce/" -%}{%- assign label = "Reproduce" -%}
+    {%- endcase -%}
+    {%- if page.nav == item -%}
+      <a href="{{ href | relative_url }}" class="is-current" aria-current="page">{{ label }}</a>
+    {%- else -%}
+      <a href="{{ href | relative_url }}">{{ label }}</a>
+    {%- endif -%}
+  {%- endfor -%}
+</nav>

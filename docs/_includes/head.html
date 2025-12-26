@@ -1,0 +1,37 @@
+{%- comment -%}
+  Document head: title, meta, Newsreader webfont (before stylesheet), OpenGraph,
+  and the single site stylesheet. All asset/internal links via relative_url.
+{%- endcomment -%}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+
+{%- assign page_title = page.title | default: site.title -%}
+{%- if page.nav == "overview" or page.title == site.title -%}
+  {%- assign full_title = site.title -%}
+{%- else -%}
+  {%- assign full_title = page_title | append: " · " | append: site.title -%}
+{%- endif -%}
+{%- assign meta_desc = page.description | default: site.description | strip_newlines | strip -%}
+
+<title>{{ full_title }}</title>
+<meta name="description" content="{{ meta_desc | escape }}">
+<meta name="author" content="{{ site.author }}">
+<link rel="canonical" href="{{ page.url | absolute_url }}">
+
+<!-- OpenGraph -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="{{ site.title | escape }}">
+<meta property="og:title" content="{{ full_title | escape }}">
+<meta property="og:description" content="{{ meta_desc | escape }}">
+<meta property="og:url" content="{{ page.url | absolute_url }}">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="{{ full_title | escape }}">
+<meta name="twitter:description" content="{{ meta_desc | escape }}">
+
+<!-- Newsreader (serif body + headings), optical-size axis, italics. Loaded before the stylesheet. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}">

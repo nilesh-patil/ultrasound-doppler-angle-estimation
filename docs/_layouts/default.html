@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  {%- include head.html -%}
+</head>
+<body class="page-{{ page.nav | default: 'page' }}">
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header" role="banner">
+    <div class="site-header__inner page">
+      <a class="site-title" href="{{ '/' | relative_url }}">Reading the Doppler angle</a>
+      {%- include nav.html -%}
+    </div>
+  </header>
+
+  <main id="main" class="site-main">
+    <article class="article">
+      {%- if page.toc -%}
+        {%- include toc.html -%}
+      {%- endif -%}
+      {{ content }}
+    </article>
+  </main>
+
+  <footer class="site-footer" role="contentinfo">
+    {%- include footer.html -%}
+  </footer>
+
+  {%- comment -%} MathJax: loaded once from CDN, only when the page opts in. {%- endcomment -%}
+  {%- if page.mathjax -%}
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['\\(', '\\)']],
+        displayMath: [['\\[', '\\]'], ['$$', '$$']],
+        processEscapes: true
+      },
+      options: {
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  {%- endif -%}
+
+  {%- comment -%} Page JS: each entry in page.scripts emitted with defer, via relative_url. {%- endcomment -%}
+  {%- if page.scripts -%}
+    {%- for s in page.scripts -%}
+  <script defer src="{{ '/assets/js/' | append: s | relative_url }}" data-base="{{ '/assets/data/' | relative_url }}"></script>
+    {%- endfor -%}
+  {%- endif -%}
+</body>
+</html>

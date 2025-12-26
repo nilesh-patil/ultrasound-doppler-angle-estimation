@@ -1,0 +1,35 @@
+# Site configuration — "Reading the Doppler angle"
+# Built by GitHub Pages. No plugins beyond the GitHub Pages allowlist (prefer none).
+title: "Reading the Doppler angle"
+description: >-
+  Learning the Doppler beam-to-vessel angle directly from a single grayscale
+  B-mode carotid image, with no color Doppler and no segmentation. A reproducible
+  re-implementation and clinical-grade extension of Patil & Anand, EMBC 2019.
+author: "Nilesh Patil"
+
+baseurl: "/ultrasound-doppler-angle-estimation"
+url: "https://www.nilesh42.science"
+
+# Pretty URLs: every page emits <name>/index.html, so the trailing-slash nav
+# links (e.g. /method/) resolve on GitHub Pages, not just under `jekyll serve`.
+permalink: pretty
+
+repository: "nilesh-patil/ultrasound-doppler-angle-estimation"
+github_repo_url: "https://github.com/nilesh-patil/ultrasound-doppler-angle-estimation"
+
+# Markdown / math
+markdown: kramdown
+kramdown:
+  math_engine: mathjax
+  input: GFM
+  hard_wrap: false
+  syntax_highlighter: rouge
+
+# No Jekyll plugins — stay within the GitHub Pages allowlist.
+plugins: []
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - vendor
+  - README.md

@@ -1,0 +1,7 @@
+source "https://rubygems.org"
+
+# Local preview of the GitHub Pages site. The production build is done by
+# GitHub Pages; this Gemfile only exists so the site can be served locally for
+# iteration. Kept plugin-free to stay within the GitHub Pages allowlist.
+gem "jekyll", "~> 4.3"
+gem "webrick", "~> 1.8"

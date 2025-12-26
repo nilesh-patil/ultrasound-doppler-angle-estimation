@@ -1,0 +1,949 @@
+/* ==========================================================================
+   Reading the Doppler angle — design system
+   Editorial, figure-centric, Newsreader serif. Ink #1a1a1a on warm white
+   #fafaf8, one steel-blue accent for chrome, brick-red reserved for chart
+   lead-series and residual/error emphasis only. Light theme.
+   Composed only from :root tokens; no ad-hoc colors in components.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Design tokens
+   -------------------------------------------------------------------------- */
+:root {
+  /* Chrome accent (links, current-nav, focus rings, control affordances) */
+  --accent: #2f5d8a;
+  --accent-deep: #244a6e;
+  --accent-wash: #eaf0f6;
+
+  /* Chart lead-series + residual/error emphasis ONLY */
+  --series-2: #b5403a;
+
+  /* Ink + surfaces */
+  --ink: #1a1a1a;
+  --bg: #fafaf8;
+  --bg-raised: #fff;
+  --bg-sunk: #f3f2ec;
+  --ink-soft: #4a4a46;
+  --ink-mute: #6f6f68;     /* captions only — meets AA at body size */
+  --hairline: #dcdad2;
+  --focus-ring: #2f5d8a;
+
+  /* Typography */
+  --font-serif: "Newsreader", Georgia, "Times New Roman", serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  --num-tabular: tabular-nums;
+
+  /* Measure / layout */
+  --measure: 68ch;
+  --measure-wide: 56rem;
+  --gutter: clamp(1.25rem, 4vw, 3rem);
+
+  /* Rhythm */
+  --space-0: 0.25rem;
+  --space-1: 0.5rem;
+  --space-2: 0.75rem;
+  --space-3: 1rem;
+  --space-4: 1.5rem;
+  --space-5: 2rem;
+  --space-6: 3rem;
+  --space-7: 4.5rem;
+
+  /* Type scale */
+  --fs-micro: 0.8125rem;
+  --fs-small: 0.9375rem;
+  --fs-body: 1.1875rem;
+  --fs-lede: 1.375rem;
+  --fs-h3: 1.375rem;
+  --fs-h2: 1.875rem;
+  --fs-h1: clamp(2.25rem, 5vw, 3.1rem);
+
+  --lh-body: 1.62;
+  --lh-tight: 1.2;
+
+  --radius: 3px;
+  --hair: 1px;
+}
+
+/* --------------------------------------------------------------------------
+   2. Reset / base
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  font-weight: 400;
+  font-optical-sizing: auto;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+img, svg, canvas { max-width: 100%; height: auto; }
+img { display: block; }
+
+a {
+  color: var(--accent);
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+a:hover { color: var(--accent-deep); text-decoration-color: currentColor; }
+
+strong, b { font-weight: 600; }
+em, i { font-style: italic; }
+small { font-size: var(--fs-small); }
+
+hr {
+  border: 0;
+  border-top: var(--hair) solid var(--hairline);
+  margin: var(--space-6) 0;
+}
+
+::selection { background: var(--accent-wash); }
+
+/* --------------------------------------------------------------------------
+   3. Focus visibility (>=2px, >=3:1)
+   -------------------------------------------------------------------------- */
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+/* Don't show the ring on mouse clicks where :focus-visible is unsupported */
+:focus:not(:focus-visible) { outline: none; }
+
+/* Visually hidden but available to AT (chart data tables, etc.) */
+.visually-hidden,
+.sr-only {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --------------------------------------------------------------------------
+   4. Skip link
+   -------------------------------------------------------------------------- */
+.skip-link {
+  position: absolute;
+  left: var(--space-3);
+  top: -3rem;
+  z-index: 100;
+  background: var(--bg-raised);
+  color: var(--ink);
+  padding: var(--space-1) var(--space-3);
+  border: var(--hair) solid var(--hairline);
+  border-radius: var(--radius);
+  text-decoration: none;
+  transition: top 0.15s ease;
+}
+.skip-link:focus { top: var(--space-2); }
+
+/* --------------------------------------------------------------------------
+   5. Layout tracks: .page (prose 68ch) and .wide / .bleed (figures/tables)
+   -------------------------------------------------------------------------- */
+.page {
+  width: 100%;
+  max-width: var(--measure);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* Wider track for figures + data tables; opt in within prose flow. */
+.wide {
+  max-width: var(--measure-wide);
+}
+
+/* Full-bleed escape hatch (rarely used). */
+.bleed {
+  width: 100vw;
+  max-width: 100vw;
+  margin-inline: calc(50% - 50vw);
+}
+
+.site-main { padding-block: var(--space-6) var(--space-7); }
+
+.article > * { /* prose default track */ }
+
+/* Most article children stay at prose measure; figures/tables can widen. */
+.article {
+  width: 100%;
+  max-width: var(--measure);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* Elements that want the wider track break out symmetrically. */
+.article > .wide,
+.article > .fig.wide,
+.article > .table-wrap.wide,
+.article > figure.wide {
+  width: min(var(--measure-wide), 100%);
+  max-width: var(--measure-wide);
+  margin-inline: auto;
+}
+@media (min-width: 60rem) {
+  .article > .wide,
+  .article > .fig.wide,
+  .article > .table-wrap.wide,
+  .article > figure.wide {
+    width: var(--measure-wide);
+    margin-inline: calc((var(--measure) - var(--measure-wide)) / 2);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   6. Site header + primary nav
+   -------------------------------------------------------------------------- */
+.site-header {
+  border-bottom: var(--hair) solid var(--hairline);
+  background: var(--bg);
+}
+.site-header__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  padding-block: var(--space-3);
+}
+.site-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.site-title:hover { color: var(--ink); text-decoration: underline; text-decoration-color: var(--hairline); }
+
+.site-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+}
+.site-nav a {
+  color: var(--ink-soft);
+  text-decoration: none;
+  font-size: var(--fs-small);
+  letter-spacing: 0.02em;
+  padding-bottom: 2px;
+  border-bottom: 2px solid transparent;
+}
+.site-nav a:hover { color: var(--ink); border-bottom-color: var(--hairline); }
+.site-nav a.is-current {
+  color: var(--ink);
+  font-weight: 500;
+  border-bottom-color: var(--accent);
+}
+
+/* --------------------------------------------------------------------------
+   7. Headings + prose typography
+   -------------------------------------------------------------------------- */
+h1, h2, h3, h4 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  line-height: var(--lh-tight);
+  color: var(--ink);
+  margin: 0 0 var(--space-3);
+  letter-spacing: -0.01em;
+}
+
+h1 {
+  font-size: var(--fs-h1);
+  font-weight: 500;
+  margin-top: var(--space-2);
+  margin-bottom: var(--space-4);
+  letter-spacing: -0.02em;
+}
+h2 {
+  font-size: var(--fs-h2);
+  margin-top: var(--space-7);
+  margin-bottom: var(--space-3);
+}
+h3 {
+  font-size: var(--fs-h3);
+  margin-top: var(--space-5);
+}
+h4 {
+  font-size: 1.125rem;
+  margin-top: var(--space-4);
+}
+
+/* Anchored headings clear the (non-sticky) header / TOC jumps */
+h2[id], h3[id] { scroll-margin-top: var(--space-4); }
+
+p { margin: 0 0 var(--space-4); }
+
+.article p, .article li { max-width: var(--measure); }
+
+ul, ol { margin: 0 0 var(--space-4); padding-left: 1.4em; }
+li { margin-bottom: var(--space-1); }
+li::marker { color: var(--ink-mute); }
+
+/* Kicker — small caps label above a heading */
+.kicker {
+  font-size: var(--fs-micro);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 500;
+  color: var(--ink-mute);
+  margin-bottom: var(--space-1);
+}
+
+/* Lede / dek — opening paragraph */
+.lede {
+  font-size: var(--fs-lede);
+  line-height: 1.5;
+  color: var(--ink-soft);
+  margin-bottom: var(--space-5);
+}
+
+blockquote {
+  margin: var(--space-5) 0;
+  padding-left: var(--space-4);
+  border-left: 3px solid var(--hairline);
+  color: var(--ink-soft);
+  font-style: italic;
+}
+blockquote p:last-child { margin-bottom: 0; }
+
+/* --------------------------------------------------------------------------
+   8. Code
+   -------------------------------------------------------------------------- */
+code, kbd, samp {
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  font-style: normal;
+}
+:not(pre) > code {
+  background: var(--bg-sunk);
+  padding: 0.12em 0.38em;
+  border-radius: var(--radius);
+  border: var(--hair) solid var(--hairline);
+}
+pre {
+  background: var(--bg-sunk);
+  border: var(--hair) solid var(--hairline);
+  border-radius: var(--radius);
+  padding: var(--space-3) var(--space-4);
+  overflow-x: auto;
+  line-height: 1.5;
+  font-size: var(--fs-small);
+  margin: 0 0 var(--space-4);
+}
+pre code {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: 1em;
+}
+
+/* --------------------------------------------------------------------------
+   9. Data tables
+   -------------------------------------------------------------------------- */
+.table-wrap {
+  overflow-x: auto;
+  margin: var(--space-4) 0 var(--space-5);
+  border: var(--hair) solid var(--hairline);
+  border-radius: var(--radius);
+  -webkit-overflow-scrolling: touch;
+}
+.table-wrap:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+table.data {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-small);
+  font-variant-numeric: var(--num-tabular);
+  background: var(--bg-raised);
+}
+table.data caption {
+  caption-side: top;
+  text-align: left;
+  font-size: var(--fs-micro);
+  color: var(--ink-mute);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: var(--hair) solid var(--hairline);
+}
+table.data th,
+table.data td {
+  padding: var(--space-2) var(--space-3);
+  text-align: right;
+  border-bottom: var(--hair) solid var(--hairline);
+  vertical-align: baseline;
+}
+table.data thead th {
+  font-weight: 600;
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--ink-mute);
+  white-space: nowrap;
+}
+table.data th[scope="row"],
+table.data tbody th,
+table.data td:first-child,
+table.data th:first-child {
+  text-align: left;
+  font-weight: 500;
+}
+table.data tbody tr:last-child td,
+table.data tbody tr:last-child th { border-bottom: 0; }
+table.data tbody tr:hover { background: color-mix(in srgb, var(--accent-wash) 55%, transparent); }
+
+/* Best / highlighted row — left hairline + weight, never a fill */
+table.data tr.is-best th[scope="row"],
+table.data tr.is-best td {
+  font-weight: 600;
+  border-top: 1.5px solid var(--series-2);
+  border-bottom: 1.5px solid var(--series-2);
+}
+table.data tr.is-best th[scope="row"] {
+  box-shadow: inset 3px 0 0 0 var(--series-2);
+}
+
+/* --------------------------------------------------------------------------
+   10. Figures + captions
+   -------------------------------------------------------------------------- */
+.fig {
+  margin: var(--space-6) auto;
+}
+.fig img,
+.fig svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: var(--bg-raised);
+  border: var(--hair) solid var(--hairline);
+  border-radius: var(--radius);
+}
+.fig figcaption,
+figure > figcaption {
+  font-size: var(--fs-small);
+  line-height: 1.5;
+  color: var(--ink-soft);
+  margin-top: var(--space-2);
+  max-width: var(--measure);
+}
+.fig__num {
+  font-variant-numeric: var(--num-tabular);
+  font-weight: 600;
+  color: var(--ink);
+  margin-right: 0.4em;
+}
+
+/* Side-by-side small figures (e.g. Grad-CAM frames) */
+.fig-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-3);
+  align-items: start;
+}
+.fig-row img,
+.fig-row svg { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   11. Caveat + footnote toggles (native <details>/<summary>)
+   ⊕ glyph rendered via CSS ::before, rotates to × on open.
+   -------------------------------------------------------------------------- */
+.caveat,
+.footnote {
+  margin: var(--space-4) 0;
+  border: var(--hair) solid var(--hairline);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--accent-wash) 35%, var(--bg-raised));
+  padding: 0 var(--space-3);
+}
+.caveat > summary,
+.footnote > summary {
+  list-style: none;
+  cursor: pointer;
+  font-size: var(--fs-small);
+  font-weight: 500;
+  color: var(--accent-deep);
+  padding: var(--space-2) 0 var(--space-2) 1.7em;
+  position: relative;
+  user-select: none;
+}
+.caveat > summary::-webkit-details-marker,
+.footnote > summary::-webkit-details-marker { display: none; }
+
+.caveat > summary::before,
+.footnote > summary::before {
+  content: "\002295"; /* circled plus ⊕ */
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.1em;
+  line-height: 1;
+  color: var(--accent);
+}
+.caveat[open] > summary::before,
+.footnote[open] > summary::before {
+  content: "\002297"; /* circled times ⊗ */
+}
+.caveat > summary:hover,
+.footnote > summary:hover { color: var(--accent); text-decoration: underline; }
+
+.caveat > *:not(summary),
+.footnote > *:not(summary) {
+  font-size: var(--fs-small);
+  color: var(--ink-soft);
+  margin-bottom: var(--space-3);
+}
+.caveat > p:not(:first-of-type),
+.footnote > p:not(:first-of-type) { margin-top: 0; }
+
+/* --------------------------------------------------------------------------
+   12. Callouts
+   -------------------------------------------------------------------------- */
+.callout {
+  margin: var(--space-5) 0;
+  padding: var(--space-4);
+  background: var(--bg-raised);
+  border: var(--hair) solid var(--hairline);
+  border-radius: var(--radius);
+}
+.callout__title {
+  font-size: var(--fs-micro);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  color: var(--ink-mute);
+  margin: 0 0 var(--space-2);
+}
+.callout > p:last-child { margin-bottom: 0; }
+
+/* --------------------------------------------------------------------------
+   13. KPI tiles
+   -------------------------------------------------------------------------- */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--space-3);
+  margin: var(--space-5) 0;
+}
+.kpi {
+  background: var(--bg-raised);
+  border: var(--hair) solid var(--hairline);
+  border-radius: var(--radius);
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+}
+.kpi__value {
+  display: block;
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1.1;
+  font-variant-numeric: var(--num-tabular);
+  color: var(--ink);
+}
+.kpi__label {
+  display: block;
+  font-size: var(--fs-micro);
+  color: var(--ink-mute);
+  margin-top: var(--space-1);
+  letter-spacing: 0.01em;
+}
+
+/* --------------------------------------------------------------------------
+   14. "Next →" page link + signpost links
+   -------------------------------------------------------------------------- */
+.next-link {
+  display: inline-block;
+  margin-top: var(--space-7);
+  padding-top: var(--space-4);
+  font-size: var(--fs-lede);
+  font-weight: 500;
+}
+.read-on {
+  display: grid;
+  gap: var(--space-3);
+  margin: var(--space-5) 0;
+  padding-left: 0;
+  list-style: none;
+}
+.read-on li { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   15. On-this-page TOC (rendered by _includes/toc.html on opted-in pages)
+   -------------------------------------------------------------------------- */
+.toc {
+  margin: 0 0 var(--space-6);
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-sunk);
+  border: var(--hair) solid var(--hairline);
+  border-radius: var(--radius);
+  font-size: var(--fs-small);
+}
+.toc__title {
+  font-size: var(--fs-micro);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-mute);
+  margin: 0 0 var(--space-2);
+  font-weight: 600;
+}
+.toc ol, .toc ul { margin: 0; padding-left: 1.2em; }
+.toc a { color: var(--ink-soft); text-decoration: none; }
+.toc a:hover { color: var(--accent); text-decoration: underline; }
+
+/* --------------------------------------------------------------------------
+   16. Widgets — shared progressive-enhancement contract
+   <figure class="fig widget"> → .fallback (visible) + .live (hidden until ready)
+   -------------------------------------------------------------------------- */
+.widget { margin: var(--space-6) auto; }
+
+/* Fallback static SVG is visible by default; live region hidden until JS paints. */
+.widget .fallback { display: block; }
+.widget .live { display: none; }
+
+.widget.js-ready .fallback { display: none; }
+.widget.js-ready .live { display: block; }
+
+/* If JS explicitly failed, force the fallback back on regardless. */
+.widget[data-failed="1"] .fallback { display: block !important; }
+.widget[data-failed="1"] .live { display: none !important; }
+
+.widget__canvas {
+  width: 100%;
+  background: var(--bg-raised);
+  border: var(--hair) solid var(--hairline);
+  border-radius: var(--radius);
+  padding: var(--space-3);
+}
+.widget__canvas svg { border: 0; background: none; }
+
+/* Chart series colors (lead = brick-red; others = steel-blue / neutral) */
+.series-1 { color: var(--accent); }
+.series-2 { color: var(--series-2); }
+.grid-line { stroke: var(--hairline); stroke-width: 1; }
+.axis-text {
+  fill: var(--ink-mute);
+  font-family: var(--font-serif);
+  font-size: 12px;
+  font-variant-numeric: var(--num-tabular);
+}
+
+/* --------------------------------------------------------------------------
+   17. Widget controls — native range / select / buttons
+   -------------------------------------------------------------------------- */
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-4);
+  align-items: end;
+  margin: var(--space-3) 0;
+}
+.control {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 12rem;
+  flex: 1 1 12rem;
+}
+.control__label {
+  font-size: var(--fs-micro);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-mute);
+  font-weight: 500;
+}
+.control__value {
+  font-variant-numeric: var(--num-tabular);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 1.4rem;
+  background: transparent;
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 3px;
+  background: var(--hairline);
+  border-radius: 3px;
+}
+input[type="range"]::-moz-range-track {
+  height: 3px;
+  background: var(--hairline);
+  border-radius: 3px;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px; height: 18px;
+  margin-top: -7.5px;
+  background: var(--accent);
+  border: 2px solid var(--bg-raised);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--accent);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 16px; height: 16px;
+  background: var(--accent);
+  border: 2px solid var(--bg-raised);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--accent);
+}
+input[type="range"]:focus-visible { outline: none; }
+input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px var(--focus-ring); }
+input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 3px var(--focus-ring); }
+
+select {
+  font-family: var(--font-serif);
+  font-size: var(--fs-small);
+  color: var(--ink);
+  background: var(--bg-raised);
+  border: var(--hair) solid var(--hairline);
+  border-radius: var(--radius);
+  padding: var(--space-1) var(--space-2);
+}
+
+.btn {
+  font-family: var(--font-serif);
+  font-size: var(--fs-small);
+  color: var(--accent-deep);
+  background: var(--bg-raised);
+  border: var(--hair) solid var(--accent);
+  border-radius: var(--radius);
+  padding: var(--space-1) var(--space-3);
+  cursor: pointer;
+}
+.btn:hover:not(:disabled) { background: var(--accent-wash); }
+.btn[aria-pressed="true"] { background: var(--accent); color: var(--bg-raised); border-color: var(--accent); }
+.btn:disabled { color: var(--ink-mute); border-color: var(--hairline); cursor: not-allowed; opacity: 0.7; }
+
+.btn-group {
+  display: inline-flex;
+  gap: 0;
+}
+.btn-group .btn { border-radius: 0; margin-left: -1px; }
+.btn-group .btn:first-child { border-radius: var(--radius) 0 0 var(--radius); margin-left: 0; }
+.btn-group .btn:last-child { border-radius: 0 var(--radius) var(--radius) 0; }
+
+/* --------------------------------------------------------------------------
+   18. Explainer (Interactive #1) — rotating B-mode + θ + velocity error
+   -------------------------------------------------------------------------- */
+.explainer {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+}
+@media (min-width: 48rem) {
+  .explainer { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); align-items: start; }
+}
+.explainer__stage {
+  position: relative;
+  background: #000;
+  border: var(--hair) solid var(--hairline);
+  border-radius: var(--radius);
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+}
+.explainer__bmode {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform-origin: center;
+  /* rotation set inline by JS via transform */
+  border: 0;
+  border-radius: 0;
+}
+.explainer__overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.explainer__overlay .beam   { stroke: var(--accent); stroke-width: 2; fill: none; }
+.explainer__overlay .vessel { stroke: var(--series-2); stroke-width: 2; fill: none; }
+.explainer__overlay .arc    { stroke: #fff; stroke-width: 1.5; fill: none; opacity: 0.85; }
+
+.explainer__readout {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+}
+.readout__theta {
+  font-size: 2.4rem;
+  font-weight: 600;
+  font-variant-numeric: var(--num-tabular);
+  line-height: 1;
+  color: var(--ink);
+}
+.readout__err {
+  font-size: 1.5rem;
+  font-weight: 600;
+  font-variant-numeric: var(--num-tabular);
+  color: var(--series-2);
+}
+.readout__err[data-sign="0"] { color: var(--ink); }
+.readout__mult {
+  font-size: var(--fs-body);
+  font-weight: 500;
+  font-variant-numeric: var(--num-tabular);
+  color: var(--ink-soft);
+}
+
+/* Static θ-vs-multiplier fallback table is shown only when JS is off.
+   The table-wrap is a sibling that follows the #chart-explainer widget figure,
+   so reach it with the general-sibling combinator once explainer.js adds
+   .js-ready to the figure on a successful first paint. */
+.widget#chart-explainer.js-ready ~ .table-wrap { display: none; }
+
+/* --------------------------------------------------------------------------
+   19. Demo (Interactive #3) — precomputed prediction explorer
+   -------------------------------------------------------------------------- */
+.demo {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+}
+@media (min-width: 48rem) {
+  .demo__grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: var(--space-4); align-items: start; }
+}
+.demo__preview {
+  background: #000;
+  border: var(--hair) solid var(--hairline);
+  border-radius: var(--radius);
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+}
+.demo__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform-origin: center;
+  border: 0;
+  border-radius: 0;
+}
+.demo__panel { display: grid; gap: var(--space-3); align-content: start; }
+.demo__stats {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--space-1) var(--space-3);
+  margin: 0;
+}
+.demo__stats dt {
+  font-size: var(--fs-micro);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-mute);
+  align-self: baseline;
+}
+.demo__stats dd {
+  margin: 0;
+  font-variant-numeric: var(--num-tabular);
+  font-weight: 600;
+  color: var(--ink);
+}
+.demo__stats dd.is-residual { color: var(--series-2); }
+
+/* --------------------------------------------------------------------------
+   20. Footer / colophon
+   -------------------------------------------------------------------------- */
+.site-footer {
+  border-top: var(--hair) solid var(--hairline);
+  background: var(--bg-sunk);
+  padding-block: var(--space-6);
+  margin-top: var(--space-7);
+}
+.colophon {
+  font-size: var(--fs-small);
+  color: var(--ink-mute);
+  line-height: 1.55;
+}
+.colophon p { margin: 0 0 var(--space-2); max-width: var(--measure); }
+.colophon p:last-child { margin-bottom: 0; }
+.colophon__author { color: var(--ink-soft); font-weight: 500; }
+.colophon a { color: var(--accent); }
+.colophon code {
+  font-size: 0.85em;
+  background: var(--bg-raised);
+}
+
+/* --------------------------------------------------------------------------
+   21. MathJax overflow safety
+   -------------------------------------------------------------------------- */
+mjx-container { max-width: 100%; }
+mjx-container[display="true"] {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-block: var(--space-1);
+}
+
+/* --------------------------------------------------------------------------
+   22. Reduced motion — gate all transitions / auto-animation
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+/* Only enable decorative transitions when motion is welcome. */
+@media (prefers-reduced-motion: no-preference) {
+  .explainer__bmode,
+  .demo__img { transition: transform 0.18s ease; }
+  .caveat[open] > summary::before,
+  .footnote[open] > summary::before { transition: transform 0.15s ease; }
+  .skip-link { transition: top 0.15s ease; }
+}
+
+/* --------------------------------------------------------------------------
+   23. Responsive
+   -------------------------------------------------------------------------- */
+@media (max-width: 38rem) {
+  :root { --fs-body: 1.125rem; --fs-h2: 1.6rem; }
+  .site-header__inner { flex-direction: column; align-items: flex-start; }
+  .site-nav { gap: var(--space-1) var(--space-3); }
+  .kpi__value { font-size: 1.7rem; }
+  .readout__theta { font-size: 2rem; }
+}
+
+/* --------------------------------------------------------------------------
+   24. Print — hide chrome, force static fallbacks
+   -------------------------------------------------------------------------- */
+@media print {
+  :root { --bg: #fff; --bg-raised: #fff; --bg-sunk: #fff; }
+  body { font-size: 11pt; color: #000; }
+  .skip-link,
+  .site-nav,
+  .toc,
+  .controls,
+  .next-link { display: none !important; }
+  .site-header { border-bottom: 1px solid #000; }
+  /* Always print the static SVG fallback, never the live canvas. */
+  .widget .fallback { display: block !important; }
+  .widget .live,
+  .widget__canvas { display: none !important; }
+  .caveat, .footnote { border-left-color: #000; }
+  .caveat[open] > *, .footnote[open] > * { display: block !important; }
+  a { color: #000; text-decoration: underline; }
+  .fig, table.data { break-inside: avoid; }
+}

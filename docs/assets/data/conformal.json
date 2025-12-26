@@ -1,0 +1,19 @@
+{
+  "levels": [
+    {
+      "nominal": 0.8,
+      "halfwidth": 15.01,
+      "empirical": 0.897
+    },
+    {
+      "nominal": 0.9,
+      "halfwidth": 20.5,
+      "empirical": 0.952
+    },
+    {
+      "nominal": 0.95,
+      "halfwidth": 26.03,
+      "empirical": 0.978
+    }
+  ]
+}

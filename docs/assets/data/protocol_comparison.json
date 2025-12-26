@@ -1,0 +1,90 @@
+{
+  "metric_default": "mape",
+  "backbones": [
+    {
+      "backbone": "densenet201",
+      "label": "DenseNet201",
+      "lead": true,
+      "image": {
+        "mape": 4.58,
+        "mae": 3.17,
+        "r2": 0.987,
+        "mape_std": 0.48
+      },
+      "patient": {
+        "mape": 12.59,
+        "mae": 9.59,
+        "r2": 0.869,
+        "mape_std": 2.15
+      }
+    },
+    {
+      "backbone": "resnet50",
+      "label": "ResNet50",
+      "lead": false,
+      "image": {
+        "mape": 6.9,
+        "mae": 5.12,
+        "r2": 0.964,
+        "mape_std": 0.54
+      },
+      "patient": {
+        "mape": 16.12,
+        "mae": 13.18,
+        "r2": 0.738,
+        "mape_std": 2.09
+      }
+    },
+    {
+      "backbone": "xception",
+      "label": "Xception",
+      "lead": false,
+      "image": {
+        "mape": 7.14,
+        "mae": 4.95,
+        "r2": 0.967,
+        "mape_std": 0.45
+      },
+      "patient": {
+        "mape": 17.11,
+        "mae": 12.44,
+        "r2": 0.784,
+        "mape_std": 3.22
+      }
+    },
+    {
+      "backbone": "inceptionv3",
+      "label": "InceptionV3",
+      "lead": false,
+      "image": {
+        "mape": 7.85,
+        "mae": 5.61,
+        "r2": 0.959,
+        "mape_std": 0.45
+      },
+      "patient": {
+        "mape": 17.29,
+        "mae": 13.75,
+        "r2": 0.743,
+        "mape_std": 2.38
+      }
+    },
+    {
+      "backbone": "vgg19",
+      "label": "VGG19",
+      "lead": false,
+      "image": {
+        "mape": 8.64,
+        "mae": 6.36,
+        "r2": 0.942,
+        "mape_std": 0.55
+      },
+      "patient": {
+        "mape": 20.6,
+        "mae": 15.92,
+        "r2": 0.626,
+        "mape_std": 4.44
+      }
+    }
+  ]
+}

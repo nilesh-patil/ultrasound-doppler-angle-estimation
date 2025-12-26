@@ -1,0 +1,37 @@
+{%- comment -%}
+  On-this-page table of contents. Included by _layouts/default.html when
+  page.toc is true (Method, Results, Clinical only). Because the h2 ids are
+  author-set kebab anchors, the list is keyed on page.nav: each case lists this
+  page's h2 (id, label) pairs in document order, matching the {#id} anchors set
+  in the page source. Hrefs are built with relative_url + #anchor so they work
+  under the baseurl. Reuses the .toc / .toc__title classes from style.css.
+{%- endcomment -%}
+<nav class="toc" aria-label="On this page">
+  <p class="toc__title">On this page</p>
+  <ol>
+    {%- case page.nav -%}
+      {%- when "method" -%}
+        <li><a href="{{ '/method/' | relative_url }}#metrics">The four metrics, defined exactly</a></li>
+        <li><a href="{{ '/method/' | relative_url }}#data">Eighty-four images become 2,100 labelled views</a></li>
+        <li><a href="{{ '/method/' | relative_url }}#protocols">Two protocols, two questions</a></li>
+        <li><a href="{{ '/method/' | relative_url }}#model">A frozen backbone and a shallow head</a></li>
+        <li><a href="{{ '/method/' | relative_url }}#grid-pooling">Orientation is the signal</a></li>
+        <li><a href="{{ '/method/' | relative_url }}#tuning">Tuning the head on cached features</a></li>
+        <li><a href="{{ '/method/' | relative_url }}#ensemble">Five backbones become one estimator</a></li>
+      {%- when "results" -%}
+        <li><a href="{{ '/results/' | relative_url }}#replication">Faithful replication</a></li>
+        <li><a href="{{ '/results/' | relative_url }}#best-estimator">The best estimator under each protocol</a></li>
+        <li><a href="{{ '/results/' | relative_url }}#protocols">Two protocols, two questions</a></li>
+        <li><a href="{{ '/results/' | relative_url }}#frozen-vs-tuned">Frozen versus tuned</a></li>
+        <li><a href="{{ '/results/' | relative_url }}#ensemble">Ensembling is the biggest lever</a></li>
+        <li><a href="{{ '/results/' | relative_url }}#backbones">Newer is not better</a></li>
+        <li><a href="{{ '/results/' | relative_url }}#learned-vs-classical">Learned versus classical, and fusion</a></li>
+      {%- when "clinical" -%}
+        <li><a href="{{ '/clinical/' | relative_url }}#conformal">A band, not just a number</a></li>
+        <li><a href="{{ '/clinical/' | relative_url }}#agreement">Agreement, not inter-observer</a></li>
+        <li><a href="{{ '/clinical/' | relative_url }}#tta">De-rotation nearly halves the per-image error</a></li>
+        <li><a href="{{ '/clinical/' | relative_url }}#gradcam">It looks at the vessel wall</a></li>
+        <li><a href="{{ '/clinical/' | relative_url }}#explorer">Explore the predictions</a></li>
+    {%- endcase -%}
+  </ol>
+</nav>

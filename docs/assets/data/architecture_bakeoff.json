@@ -1,0 +1,115 @@
+{
+  "reference_backbone": "densenet201",
+  "rows": [
+    {
+      "backbone": "densenet201",
+      "label": "DenseNet201",
+      "tier": "Classic ImageNet",
+      "mape": 14.13,
+      "mape_std": 2.19,
+      "mae": 9.56,
+      "r2": 0.873,
+      "lead": true
+    },
+    {
+      "backbone": "convnext_base",
+      "label": "ConvNeXt-Base",
+      "tier": "ConvNeXt",
+      "mape": 15.65,
+      "mape_std": 1.75,
+      "mae": 12.49,
+      "r2": 0.778,
+      "lead": false
+    },
+    {
+      "backbone": "convnext_tiny",
+      "label": "ConvNeXt-Tiny",
+      "tier": "ConvNeXt",
+      "mape": 16.07,
+      "mape_std": 3.1,
+      "mae": 12.82,
+      "r2": 0.761,
+      "lead": false
+    },
+    {
+      "backbone": "efficientnetv2b1",
+      "label": "EfficientNetV2-B1",
+      "tier": "EfficientNet / V2",
+      "mape": 17.23,
+      "mape_std": 2.52,
+      "mae": 12.12,
+      "r2": 0.81,
+      "lead": false
+    },
+    {
+      "backbone": "efficientnetv2b2",
+      "label": "EfficientNetV2-B2",
+      "tier": "EfficientNet / V2",
+      "mape": 17.94,
+      "mape_std": 2.63,
+      "mae": 12.65,
+      "r2": 0.796,
+      "lead": false
+    },
+    {
+      "backbone": "efficientnetb3",
+      "label": "EfficientNet-B3",
+      "tier": "EfficientNet / V2",
+      "mape": 18.01,
+      "mape_std": 2.62,
+      "mae": 13.32,
+      "r2": 0.75,
+      "lead": false
+    },
+    {
+      "backbone": "efficientnetv2b0",
+      "label": "EfficientNetV2-B0",
+      "tier": "EfficientNet / V2",
+      "mape": 18.31,
+      "mape_std": 2.51,
+      "mae": 13.3,
+      "r2": 0.755,
+      "lead": false
+    },
+    {
+      "backbone": "efficientnetb0",
+      "label": "EfficientNet-B0",
+      "tier": "EfficientNet / V2",
+      "mape": 18.4,
+      "mape_std": 4.75,
+      "mae": 12.53,
+      "r2": 0.788,
+      "lead": false
+    },
+    {
+      "backbone": "efficientnetb1",
+      "label": "EfficientNet-B1",
+      "tier": "EfficientNet / V2",
+      "mape": 19.32,
+      "mape_std": 4.63,
+      "mae": 13.44,
+      "r2": 0.748,
+      "lead": false
+    },
+    {
+      "backbone": "efficientnetv2b3",
+      "label": "EfficientNetV2-B3",
+      "tier": "EfficientNet / V2",
+      "mape": 19.53,
+      "mape_std": 3.39,
+      "mae": 13.65,
+      "r2": 0.747,
+      "lead": false
+    },
+    {
+      "backbone": "efficientnetb2",
+      "label": "EfficientNet-B2",
+      "tier": "EfficientNet / V2",
+      "mape": 21.25,
+      "mape_std": 5.58,
+      "mae": 13.83,
+      "r2": 0.696,
+      "lead": false
+    }
+  ]
+}

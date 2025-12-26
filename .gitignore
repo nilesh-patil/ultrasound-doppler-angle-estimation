@@ -21,3 +21,4 @@ __pycache__/
 results/cache/
 results/corpus_meta.csv
 *.h5.tmp
+.preview-shots/
