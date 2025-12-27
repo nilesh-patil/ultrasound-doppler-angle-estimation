@@ -34,8 +34,8 @@
   --num-tabular: tabular-nums;
 
   /* Measure / layout */
-  --measure: 68ch;
-  --measure-wide: 56rem;
+  --measure: 86ch;
+  --measure-wide: 60rem;
   --gutter: clamp(1.25rem, 4vw, 3rem);
 
   /* Rhythm */
@@ -196,7 +196,9 @@ hr {
   max-width: var(--measure-wide);
   margin-inline: auto;
 }
-@media (min-width: 60rem) {
+/* Only pull .wide elements out past the prose track once the viewport is wide
+   enough to absorb the negative margins; below this they stay at prose width. */
+@media (min-width: 68rem) {
   .article > .wide,
   .article > .fig.wide,
   .article > .table-wrap.wide,
