@@ -149,7 +149,7 @@ hr {
   border: var(--hair) solid var(--hairline);
   border-radius: var(--radius);
   text-decoration: none;
-  transition: top 0.15s ease;
+  /* transition gated in the prefers-reduced-motion: no-preference block */
 }
 .skip-link:focus { top: var(--space-2); }
 
@@ -632,8 +632,8 @@ figure > figcaption {
 .widget__canvas svg { border: 0; background: none; }
 
 /* Chart series colors (lead = brick-red; others = steel-blue / neutral) */
-.series-1 { color: var(--accent); }
-.series-2 { color: var(--series-2); }
+.series-1 { color: var(--accent); stroke: var(--accent); }
+.series-2 { color: var(--series-2); stroke: var(--series-2); fill: var(--series-2); }
 .grid-line { stroke: var(--hairline); stroke-width: 1; }
 .axis-text {
   fill: var(--ink-mute);
@@ -716,7 +716,9 @@ select {
   font-size: var(--fs-small);
   color: var(--ink);
   background: var(--bg-raised);
-  border: var(--hair) solid var(--hairline);
+  /* Interactive control needs a >=3:1 boundary (WCAG 1.4.11); --ink-mute is
+     5:1 on bg-raised, while static chrome keeps the lighter --hairline. */
+  border: var(--hair) solid var(--ink-mute);
   border-radius: var(--radius);
   padding: var(--space-1) var(--space-2);
 }
@@ -784,6 +786,12 @@ select {
 .explainer__overlay .vessel { stroke: var(--series-2); stroke-width: 2; fill: none; }
 .explainer__overlay .arc    { stroke: #fff; stroke-width: 1.5; fill: none; opacity: 0.85; }
 
+/* 1/cos θ curve SVG — paint via scoped rules (these elements never set
+   currentColor, so the generic .series-* color rules cannot drive SVG paint). */
+.explainer__cos-svg path.series-1 { stroke: var(--accent); stroke-width: 2; fill: none; }
+.explainer__cos-svg .explainer__cos-guide { stroke: var(--ink-mute); stroke-width: 1; stroke-dasharray: 3 3; }
+.explainer__cos-svg circle.series-2 { fill: var(--series-2); }
+
 .explainer__readout {
   display: grid;
   gap: var(--space-3);
@@ -809,12 +817,15 @@ select {
   font-variant-numeric: var(--num-tabular);
   color: var(--ink-soft);
 }
+/* Steep-angle danger: the multiplier diverges as cos θ → 0 (JS toggles
+   .is-diverging on the gauge). Quiet brick-red emphasis, no layout shift. */
+.readout__mult.is-diverging { color: var(--series-2); font-weight: 600; }
 
 /* Static θ-vs-multiplier fallback table is shown only when JS is off.
    The table-wrap is a sibling that follows the #chart-explainer widget figure,
    so reach it with the general-sibling combinator once explainer.js adds
    .js-ready to the figure on a successful first paint. */
-.widget#chart-explainer.js-ready ~ .table-wrap { display: none; }
+.widget#chart-explainer.js-ready ~ .explainer__static-table { display: none; }
 
 /* --------------------------------------------------------------------------
    19. Demo (Interactive #3) — precomputed prediction explorer
@@ -862,7 +873,7 @@ select {
   font-weight: 600;
   color: var(--ink);
 }
-.demo__stats dd.is-residual { color: var(--series-2); }
+.demo__stats dd.demo__residual { color: var(--series-2); }
 
 /* --------------------------------------------------------------------------
    20. Footer / colophon

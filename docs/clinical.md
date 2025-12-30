@@ -68,14 +68,14 @@ There is exactly one MATLAB-GUI reference reading (<code>theta_true</code>) per 
 
 <figure class="fig widget wide" id="chart-bland-altman-fig">
   <p class="fig__num">Figure 2</p>
-  <img class="fallback" src="{{ '/assets/figures/figure_bland_altman.svg' | relative_url }}" alt="Bland–Altman plot: signed difference between model and reference angle on the vertical axis against their mean on the horizontal axis, with a bias line near minus four degrees and dashed 95 percent limits-of-agreement lines above and below." />
+  <img class="fallback" loading="lazy" decoding="async" src="{{ '/assets/figures/figure_bland_altman.svg' | relative_url }}" alt="Bland–Altman plot: signed difference between model and reference angle on the vertical axis against their mean on the horizontal axis, with a bias line near minus four degrees and dashed 95 percent limits-of-agreement lines above and below." />
   <div class="widget__canvas live" id="chart-bland-altman" hidden></div>
   <figcaption>Model and reference agree to within a small negative bias of −4.31°; the 95% limits of agreement span −24.25° to +15.63°. The interactive view plots a downsampled set of the per-sample differences, with a per-patient toggle for the twelve patient-proxy means.</figcaption>
 </figure>
 
-## De-rotation nearly halves the per-image error {#tta}
+## De-rotation cuts the per-image error by about two-fifths {#tta}
 
-The augmentation that builds the training corpus is also a tool at inference. Each of the 84 base images carries 25 rotation views; median rotation test-time augmentation de-rotates every view back to the base frame and reduces them circularly (180°-periodic, seam-safe). On the base images this takes the raw base-image MAE from **7.80° down to 4.72°** under the circular median (and to 5.31° under the circular mean) — roughly halving the per-image error.
+The augmentation that builds the training corpus is also a tool at inference. Each of the 84 base images carries 25 rotation views; median rotation test-time augmentation de-rotates every view back to the base frame and reduces them circularly (180°-periodic, seam-safe). On the base images this takes the raw base-image MAE from **7.80° down to 4.72°** under the circular median (and to 5.31° under the circular mean) — cutting the per-image error by roughly 40%.
 
 <div class="callout">
   <p class="callout__title">Rotation TTA, base-image MAE</p>
@@ -93,21 +93,21 @@ A model that reports an angle should be reading the anatomy that defines the flo
 
 <figure class="fig wide" id="fig-gradcam-montage">
   <p class="fig__num">Figure 3</p>
-  <img class="fallback" src="{{ '/assets/figures/gradcam_montage.svg' | relative_url }}" alt="Grad-CAM montage: a row of carotid B-mode frames overlaid with warm heatmaps, each concentrated along the long bright vessel-wall boundary that runs across the frame." />
+  <img class="fallback" loading="lazy" decoding="async" src="{{ '/assets/figures/gradcam_montage.svg' | relative_url }}" alt="Grad-CAM montage: a row of carotid B-mode frames overlaid with warm heatmaps, each concentrated along the long bright vessel-wall boundary that runs across the frame." />
   <figcaption>Grad-CAM attributions concentrate along the vessel wall, the structure that defines the flow axis the model is estimating.</figcaption>
 </figure>
 
 <div class="fig-row">
   <figure class="fig">
-    <img src="{{ '/assets/figures/gradcam_densenet201_09-41-06_1.png' | relative_url }}" alt="Grad-CAM overlay on carotid B-mode image 09-41-06_1: the heatmap sits on the vessel-wall boundary." />
+    <img loading="lazy" decoding="async" src="{{ '/assets/figures/gradcam_densenet201_09-41-06_1.png' | relative_url }}" alt="Grad-CAM overlay on carotid B-mode image 09-41-06_1: the heatmap sits on the vessel-wall boundary." />
     <figcaption>Image 09-41-06_1.</figcaption>
   </figure>
   <figure class="fig">
-    <img src="{{ '/assets/figures/gradcam_densenet201_09-46-10_1.png' | relative_url }}" alt="Grad-CAM overlay on carotid B-mode image 09-46-10_1: the heatmap sits on the vessel-wall boundary." />
+    <img loading="lazy" decoding="async" src="{{ '/assets/figures/gradcam_densenet201_09-46-10_1.png' | relative_url }}" alt="Grad-CAM overlay on carotid B-mode image 09-46-10_1: the heatmap sits on the vessel-wall boundary." />
     <figcaption>Image 09-46-10_1.</figcaption>
   </figure>
   <figure class="fig">
-    <img src="{{ '/assets/figures/gradcam_densenet201_09-53-51.png' | relative_url }}" alt="Grad-CAM overlay on carotid B-mode image 09-53-51: the heatmap sits on the vessel-wall boundary." />
+    <img loading="lazy" decoding="async" src="{{ '/assets/figures/gradcam_densenet201_09-53-51.png' | relative_url }}" alt="Grad-CAM overlay on carotid B-mode image 09-53-51: the heatmap sits on the vessel-wall boundary." />
     <figcaption>Image 09-53-51.</figcaption>
   </figure>
 </div>
@@ -129,7 +129,7 @@ The explorer reads precomputed real predictions exported from <code>results/pred
 <section id="prediction-demo" class="demo" aria-label="Precomputed prediction explorer">
   <figure class="fig widget" id="demo-fig">
     <p class="fig__num">Figure 4</p>
-    <img class="fallback" src="{{ '/assets/figures/figure4_pred_vs_actual.svg' | relative_url }}" alt="Scatter of predicted versus actual insonation angle, with points clustered along the identity line, shown as the static fallback for the prediction explorer." />
+    <img class="fallback" src="{{ '/assets/figures/figure4_pred_vs_actual.svg' | relative_url }}" alt="Five per-backbone scatter panels of predicted versus actual insonation angle, points clustered along the identity line, shown as the static fallback for the prediction explorer." />
     <div class="demo__grid live" hidden>
       <div class="demo__preview">
         <img class="demo__img" id="demo-thumb" src="{{ '/assets/images/bmode/09-49-17_1.jpg' | relative_url }}" alt="Selected carotid B-mode study image preview." />
@@ -147,10 +147,10 @@ The explorer reads precomputed real predictions exported from <code>results/pred
           </div>
         </div>
         <dl class="demo__stats" id="demo-result" aria-live="polite"></dl>
-        <div class="widget__canvas" id="demo-band" role="img" aria-label="Number line showing the reference angle, the model estimate, and the ±20.50° conformal band."></div>
+        <div class="widget__canvas" id="demo-band"></div>
       </div>
     </div>
-    <figcaption>Precomputed real out-of-fold predictions for the tuned DenseNet201 on the 84 study images, with the ±20.50° conformal band drawn around each estimate.</figcaption>
+    <figcaption>Per-backbone predicted-versus-reference scatter (static fallback); the interactive explorer above reads the tuned DenseNet201 predictions and the ±20.50° conformal band.</figcaption>
   </figure>
 </section>
 

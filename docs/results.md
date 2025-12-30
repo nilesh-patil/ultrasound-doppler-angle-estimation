@@ -72,9 +72,9 @@ The member rows and the ensemble rows aggregate differently: member rows are per
 The scatter below pairs the stacked ensemble's predictions against the reference angle, image by image.
 
 <figure class="fig widget" id="fig-pred-vs-actual">
-  <img class="fallback" src="{{ '/assets/figures/figure4_pred_vs_actual.svg' | relative_url }}" alt="Scatter of predicted Doppler angle against reference angle for the stacked ensemble; points cluster tightly along the identity line across the full range of reference Doppler angles, roughly twenty to one hundred sixty degrees.">
+  <img class="fallback" loading="lazy" decoding="async" src="{{ '/assets/figures/figure4_pred_vs_actual.svg' | relative_url }}" alt="Five scatter panels, one per backbone (DenseNet201, InceptionV3, Xception, ResNet50, VGG19), each plotting predicted against reference Doppler angle with points clustered along the identity line; the interactive version overlays the stacked ensemble and its conformal band.">
   <div class="widget__canvas live" id="chart-pred-vs-actual" hidden></div>
-  <figcaption><span class="fig__num">Figure 1.</span> Predicted versus reference angle for the stacked ensemble. Points hug the identity line across the full angular range; the residual scatter widens modestly at the extremes.</figcaption>
+  <figcaption><span class="fig__num">Figure 1.</span> Predicted versus reference angle, per backbone (the interactive version overlays the stacked ensemble and its conformal band). Points hug the identity line across the full angular range; the residual scatter widens modestly at the extremes.</figcaption>
 </figure>
 
 ## Two protocols, two questions {#protocols}
@@ -100,7 +100,7 @@ Holding the frozen grid-pooling model fixed and changing only the sampling proto
 The tuned stacked ensemble reaches 2.79% MAPE / 1.96&deg; MAE under image-level sampling and 8.53% / 5.93&deg; under patient-level, roughly a 3&times; MAPE spread. This is the expected signature of a small cohort (~10 volunteers): the model interpolates the augmented-image manifold very well, while cross-subject generalization is intrinsically harder and carries genuine per-fold variance. DenseNet201 holds both the smallest protocol gap and the highest patient-level R&sup2; (0.869), which is why it is carried forward; the ordering among the weaker four shifts with the lens, while the choice of lead backbone does not.
 
 <figure class="fig widget" id="fig-protocol-comparison">
-  <img class="fallback" src="{{ '/assets/figures/figure_protocol_comparison.svg' | relative_url }}" alt="Grouped bar chart of MAPE per backbone under image-level and patient-level sampling; every backbone's patient-level bar is roughly double its image-level bar, with DenseNet201 lowest in both.">
+  <img class="fallback" loading="lazy" decoding="async" src="{{ '/assets/figures/figure_protocol_comparison.svg' | relative_url }}" alt="Grouped bar chart of MAPE per backbone under image-level and patient-level sampling; every backbone's patient-level bar is roughly double its image-level bar, with DenseNet201 lowest in both.">
   <div class="widget__canvas live" id="chart-protocol-comparison" hidden></div>
   <figcaption><span class="fig__num">Figure 2.</span> Image-level versus patient-level MAPE per backbone. Patient-level error is roughly double image-level for every backbone, and the spread measures how much within-population accuracy is anatomy-specific rather than a defect of either protocol.</figcaption>
 </figure>
@@ -108,7 +108,7 @@ The tuned stacked ensemble reaches 2.79% MAPE / 1.96&deg; MAE under image-level 
 The same protocol gap shows up as a function of the true angle: error grows toward the extreme insonation angles, where the geometry is least forgiving.
 
 <figure class="fig widget" id="fig-error-vs-angle">
-  <img class="fallback" src="{{ '/assets/figures/figure5_error_vs_angle.svg' | relative_url }}" alt="Plot of absolute angle error against the reference angle; mean error per ten-degree bin is smallest in the mid-angle band and rises toward the extreme reference angles at both ends.">
+  <img class="fallback" loading="lazy" decoding="async" src="{{ '/assets/figures/figure5_error_vs_angle.svg' | relative_url }}" alt="Plot of absolute angle error against the reference angle; mean error per ten-degree bin is smallest in the mid-angle band and rises toward the extreme reference angles at both ends.">
   <div class="widget__canvas live" id="chart-error-vs-angle" hidden></div>
   <figcaption><span class="fig__num">Figure 3.</span> Error as a function of the reference angle. The estimator is most accurate near the center of the augmented range and degrades toward the extreme orientations.</figcaption>
 </figure>
@@ -118,7 +118,7 @@ The same protocol gap shows up as a function of the true angle: error grows towa
 Tuning the head helps under both protocols. For DenseNet201, like-for-like under five-fold CV against the grid-pooling frozen baseline: image-level 4.58% &rarr; 4.03% MAPE and patient-level 12.59% &rarr; 10.80%. The gains are modest per model but consistent, and tuning makes the five members well-calibrated enough that a plain mean ensemble works, where an untuned mean ensemble was effectively useless.
 
 <figure class="fig" id="fig-tuning-history">
-  <img src="{{ '/assets/figures/figure_tuning_history.svg' | relative_url }}" alt="Optuna tuning-history plot showing validation MAE decreasing across trials as the search converges on better head configurations.">
+  <img loading="lazy" decoding="async" src="{{ '/assets/figures/figure_tuning_history.svg' | relative_url }}" alt="Optuna tuning-history plot showing validation MAE decreasing across trials as the search converges on better head configurations.">
   <figcaption><span class="fig__num">Figure 4.</span> Optuna tuning history. Validation error falls and then plateaus as the TPE search converges; the tuning is in-sample, so the per-model gains are read against the frozen baseline rather than as held-out improvements.</figcaption>
 </figure>
 
@@ -134,8 +134,8 @@ The ensemble rows are pooled out-of-fold predictions, and the Ridge stacker is f
 </details>
 
 <figure class="fig">
-  <img src="{{ '/assets/figures/figure4_pred_vs_actual.svg' | relative_url }}" alt="Predicted-versus-reference scatter for the ensemble, with most points lying on or near the identity diagonal across the full angular range.">
-  <figcaption><span class="fig__num">Figure 5.</span> The ensemble's predictions against the reference. Combining five partly independent estimators tightens the scatter that a single model leaves on the table.</figcaption>
+  <img loading="lazy" decoding="async" src="{{ '/assets/figures/figure4_pred_vs_actual.svg' | relative_url }}" alt="Five per-backbone scatter panels of predicted against reference angle, points lying on or near the identity diagonal across the full angular range.">
+  <figcaption><span class="fig__num">Figure 5.</span> Per-backbone predicted-versus-reference scatter. Combining five partly independent estimators tightens the scatter that a single model leaves on the table.</figcaption>
 </figure>
 
 ## Newer is not better {#backbones}
@@ -159,7 +159,7 @@ A frozen bake-off under patient five-fold CV (grid pooling, untuned heads) spans
 Within the classic group the differences sit inside the per-fold standard deviation; across families, the older encoders win. Every row in this bake-off shares one feature-extraction batch, so DenseNet201's 14.13% here is the like-for-like point against the modern backbones, whereas its replication-extraction value above is 12.59%. With only 84 base images, larger and ImageNet-stronger encoders have nothing to grip. DenseNet201 — the best R&sup2;, the replication winner, and the strongest after tuning — is carried forward.
 
 <figure class="fig">
-  <img src="{{ '/assets/figures/figure_architecture_bakeoff.svg' | relative_url }}" alt="Bar chart of patient five-fold MAPE across backbone families; DenseNet201 is lowest, the ConvNeXt pair is in the middle, and the EfficientNet and EfficientNetV2 families are highest, with error bars spanning the per-fold standard deviation.">
+  <img loading="lazy" decoding="async" src="{{ '/assets/figures/figure_architecture_bakeoff.svg' | relative_url }}" alt="Bar chart of patient five-fold MAPE across backbone families; DenseNet201 is lowest, the ConvNeXt pair is in the middle, and the EfficientNet and EfficientNetV2 families are highest, with error bars spanning the per-fold standard deviation.">
   <figcaption><span class="fig__num">Figure 6.</span> Backbone bake-off, patient five-fold MAPE. The classic ImageNet encoders lead the modern ConvNeXt and EfficientNet families; the interactive version of this chart lives on the <a href="{{ '/method/' | relative_url }}#grid-pooling">Method page</a>.</figcaption>
 </figure>
 
@@ -170,7 +170,7 @@ ConvNeXt fails to run on TF-Metal because of an XLA op-support gap, so it was ex
 
 ## Learned versus classical, and fusion {#learned-vs-classical}
 
-A purely classical, image-only structure-tensor angle prior reaches 3.16&deg; MAE on the narrow base-angle band, and a circular fusion of the learned and classical estimates reaches 2.72&deg; MAE, improving on either alone. The learned model and a hand-crafted geometric cue capture partly complementary information.
+A purely classical, image-only structure-tensor angle prior reaches 3.16&deg; MAE on the narrow base-angle band, and a circular fusion of the learned and classical estimates reaches 2.72&deg; MAE, improving on the classical prior and on the learned model's base-band error. The learned model and a hand-crafted geometric cue capture partly complementary information.
 
 <details class="caveat">
 <summary>The fusion number is in-sample, on a narrow band of angles</summary>

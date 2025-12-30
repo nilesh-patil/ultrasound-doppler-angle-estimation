@@ -176,14 +176,7 @@
     var s = svg('svg', {
       viewBox: '0 0 ' + W + ' ' + H,
       width: '100%', preserveAspectRatio: 'xMidYMid meet',
-      'class': 'demo__numberline',
-      role: 'img',
-      'aria-label':
-        'Reference angle ' + fmtDeg(entry.theta_true) +
-        '; predicted ' + fmtDeg(entry.theta_pred) +
-        ' with a 90% conformal band of plus or minus ' + halfwidth.toFixed(2) + ' degrees from ' +
-        fmtDeg(entry.theta_pred - halfwidth) + ' to ' + fmtDeg(entry.theta_pred + halfwidth) +
-        '. The reference reading is ' + (inside ? 'inside' : 'outside') + ' the band.'
+      'class': 'demo__numberline'
     });
 
     // baseline axis
@@ -244,6 +237,12 @@
     trueLbl.textContent = 'θ ' + num(entry.theta_true).toFixed(1) + '°';
     s.appendChild(trueLbl);
 
+    host.setAttribute('aria-label',
+      'Reference angle ' + fmtDeg(entry.theta_true) +
+      '; predicted ' + fmtDeg(entry.theta_pred) +
+      ' with a 90% conformal band of plus or minus ' + halfwidth.toFixed(2) + ' degrees from ' +
+      fmtDeg(entry.theta_pred - halfwidth) + ' to ' + fmtDeg(entry.theta_pred + halfwidth) +
+      '. The reference reading is ' + (inside ? 'inside' : 'outside') + ' the band.');
     host.innerHTML = '';
     host.appendChild(s);
   }
@@ -251,13 +250,11 @@
   function renderResult(host, entry, halfwidth) {
     var inside = Math.abs(entry.error) <= halfwidth;
     host.innerHTML = '';
-    var dl = document.createElement('dl');
-    dl.className = 'demo__stats';
     function row(term, val, cls) {
       var dt = document.createElement('dt'); dt.textContent = term;
       var dd = document.createElement('dd'); dd.textContent = val;
       if (cls) dd.className = cls;
-      dl.appendChild(dt); dl.appendChild(dd);
+      host.appendChild(dt); host.appendChild(dd);
     }
     row('Reference angle θ', fmtDeg(entry.theta_true));
     row('Predicted θ̂', fmtDeg(entry.theta_pred));
@@ -266,7 +263,6 @@
       fmtDeg(entry.theta_pred - halfwidth) + ' to ' + fmtDeg(entry.theta_pred + halfwidth) +
       ' (±' + halfwidth.toFixed(2) + '°)');
     row('Reference within band', inside ? 'yes' : 'no');
-    host.appendChild(dl);
   }
 
   // ---- wiring ---------------------------------------------------------------
@@ -280,6 +276,7 @@
     var result = $('demo-result');
     var band = $('demo-band');
     var live = $('demo-enable-live');
+    var rotValue = $('demo-rotation-value');
 
     if (!sel || !result || !band) throw new Error('demo: required mount ids missing');
 
@@ -325,6 +322,7 @@
           if (reduceMotion) thumb.style.transition = 'none';
           thumb.style.transform = 'rotate(' + (-rot) + 'deg)';
         }
+        if (rotValue) rotValue.textContent = rot + '°';
       }
       renderResult(result, entry, model.halfwidth);
       renderBand(band, entry, model.halfwidth);

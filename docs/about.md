@@ -1,7 +1,7 @@
 ---
 layout: default
 title: About this project
-nav: reproduce
+nav: about
 mathjax: false
 description: About "Reading the Doppler angle" — a research essay by Nilesh Patil re-implementing and extending the EMBC 2019 Doppler-angle estimator, with citation, paper PDF, source repository, and build colophon.
 ---
@@ -34,7 +34,7 @@ The original 2017–2018 notebooks and weights are preserved untouched under `le
 
 - Manuscript (PDF): [`paper/main.pdf`]({{ '/assets/paper/main.pdf' | relative_url }})
 - Source code, data, and regenerated results: [GitHub — ultrasound-doppler-angle-estimation](https://github.com/nilesh-patil/ultrasound-doppler-angle-estimation)
-- Results and comparative-analysis narrative: [`docs/analysis.md`]({{ 'analysis.md' | relative_url }})
+- Results and comparative-analysis narrative: [Results &amp; analysis]({{ '/analysis/' | relative_url }})
 - How to reproduce every number: [Reproduce]({{ '/reproduce/' | relative_url }})
 
 ## Colophon {#colophon}

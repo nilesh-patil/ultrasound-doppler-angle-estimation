@@ -317,12 +317,11 @@
       });
       maxV = Math.ceil(maxV / 5) * 5;
 
-      var cats = ordered.map(function (r, i) { return { label: r.label || r.backbone, x: 0 }; });
       var f = frame(svg, T, {
         xDomain: [0, ordered.length],
         yDomain: [0, maxV],
         yLabel: metric.toUpperCase() + (metric === 'mape' ? ' (%)' : ' (°)'),
-        xLabel: 'Backbone',
+        xCats: [],
         yFmt: function (v) { return fmt(v, 0); }
       });
 
@@ -415,12 +414,14 @@
       ['Backbone', metric.toUpperCase(), '± std'],
       label);
 
+    svg.setAttribute('aria-label', label);
     return { svg: svg, label: label, table: table, controls: controls };
   }
 
   // -- scatter: predicted vs actual (identity line + conformal band) ---------
   function renderScatter(data, spec, T) {
     var pts = data.points || [];
+    if (!pts.length) throw new Error('empty dataset');   // keep static fallback (PE contract)
     var hw = data.conformal_halfwidth;
     var allT = pts.map(function (p) { return p.true; });
     var allP = pts.map(function (p) { return p.pred; });
@@ -486,13 +487,11 @@
       // cross-link to demo on base-image click (clinical explorer)
       if (isBase && p.id != null) {
         c.addEventListener('click', function () {
-          if (global.UDA && UDA.demo && typeof UDA.demo.select === 'function') {
-            UDA.demo.select(p.id);
-          } else {
-            try {
-              global.location.hash = '#prediction-demo';
-            } catch (e) { /* ignore */ }
-          }
+          var root = (global.UDA && typeof UDA.assetBase === 'string' && UDA.assetBase)
+            ? UDA.assetBase.replace(/assets\/+$/, '')   // ".../assets/" -> site root
+            : '/';
+          try { global.location.href = root + 'clinical/#prediction-demo'; }
+          catch (e) { /* ignore */ }
         });
       }
       dots.appendChild(c);
@@ -516,6 +515,7 @@
   // -- errorScatter: signed error vs reference angle (with binned means) -----
   function renderErrorScatter(data, spec, T) {
     var pts = data.points || [];
+    if (!pts.length) throw new Error('empty dataset');   // keep static fallback (PE contract)
     var bins = data.error_bins || [];
     var bias = data.bias_line;
     var xs = pts.map(function (p) { return p.true; });
@@ -608,6 +608,7 @@
       clear(svg);
       var block = data[view];
       var pts = block.points || [];
+      if (!pts.length) throw new Error('empty dataset');   // keep static fallback (PE contract)
       var means = pts.map(function (p) { return p.mean; });
       var diffs = pts.map(function (p) { return p.diff; });
       var xlo = Math.floor(Math.min.apply(null, means) / 10) * 10;
@@ -697,6 +698,7 @@
   // -- calibrationStep: conformal coverage vs nominal ------------------------
   function renderCalibration(data, spec, T) {
     var levels = (data.levels || []).slice().sort(function (a, b) { return a.nominal - b.nominal; });
+    if (!levels.length) throw new Error('empty dataset');   // keep static fallback (PE contract)
 
     var svg = makeSvg('');
     var maxHw = Math.ceil(Math.max.apply(null, levels.map(function (l) { return l.halfwidth; })) / 5) * 5 + 5;
@@ -920,9 +922,9 @@
       mount.appendChild(out.svg);
       if (out.table) mount.appendChild(out.table);
 
-      // accessibility: role/label on the live region too
-      mount.setAttribute('role', 'img');
-      if (out.label) mount.setAttribute('aria-label', out.label);
+      // accessibility: the accessible name lives on the inner <svg> (role="img");
+      // the mount must NOT be role="img" or its descendant table/controls/bars
+      // would be pruned from the a11y tree.
 
       // reveal live, hide fallback — only AFTER paint
       if (parts.fig) parts.fig.classList.add('js-ready');

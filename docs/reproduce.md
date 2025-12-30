@@ -94,7 +94,7 @@ docs/               # analysis.md — the results & comparative-analysis narrati
 
 The cohort is the one introduced in the EMBC 2019 study, drawn from the public SPLab (Brno) ultrasound database: 84 longitudinal common-carotid artery (CCA) B-mode images from about ten young, healthy volunteers (mean age 27.5 years), usually eight images per volunteer. Acquisition used a single Sonix OP scanner with linear-array transducers (10 and 14 MHz), with the subject supine and the right CCA imaged in longitudinal view at roughly 390×330 pixels.
 
-Each image is rotated over [−60°, +60°] in 5° steps to give 25 oriented views and approximately 2,100 labelled examples; the rotation supplies an exact angle label for each view. These 2,100 examples are coupled copies of 84 base images, not 2,100 independent acquisitions. The supervised target is the Doppler angle θ. Because the database carries no clinical Doppler-angle annotation, the reference θ was measured offline by one operator in a custom MATLAB interface, drawing a line along the vessel wall and recording its inclination. This single hand-drawn reading is the only ground truth available per image, and its own measurement error is unknown.
+Each image is rotated over [−60°, +60°] in 5° steps to give 25 oriented views per image and 84 × 25 = 2,100 labelled examples; the rotation supplies an exact angle label for each view. These 2,100 examples are coupled copies of 84 base images, not 2,100 independent acquisitions. The supervised target is the Doppler angle θ. Because the database carries no clinical Doppler-angle annotation, the reference θ was measured offline by one operator in a custom MATLAB interface, drawing a line along the vessel wall and recording its inclination. This single hand-drawn reading is the only ground truth available per image, and its own measurement error is unknown.
 
 ## Honest scope and limitations {#limitations}
 
@@ -122,7 +122,7 @@ The code, data, regenerated results, and the full manuscript are public:
 
 - Repository and data: [GitHub — ultrasound-doppler-angle-estimation](https://github.com/nilesh-patil/ultrasound-doppler-angle-estimation)
 - Manuscript (PDF): [`paper/main.pdf`]({{ '/assets/paper/main.pdf' | relative_url }})
-- Results and comparative-analysis narrative: [`docs/analysis.md`]({{ 'analysis.md' | relative_url }})
+- Results and comparative-analysis narrative: [Results &amp; analysis]({{ '/analysis/' | relative_url }})
 - Project and author notes: [About]({{ '/about/' | relative_url }})
 
 <p><a href="{{ '/about/' | relative_url }}">About this project →</a></p>

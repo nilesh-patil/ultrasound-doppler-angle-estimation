@@ -125,13 +125,12 @@
     // Clear any prior content (idempotent re-init).
     while (mount.firstChild) mount.removeChild(mount.firstChild);
 
+    // The outer #explainer-cos-curve mount carries role=img + aria-label
+    // (index.md); this inner SVG's label would be pruned, so we omit it to
+    // avoid dead, redundant accessibility markup.
     var svg = el('svg', {
       viewBox: '0 0 ' + CURVE.w + ' ' + CURVE.h,
-      class: 'explainer__cos-svg',
-      role: 'img',
-      'aria-label': 'Velocity correction factor one over cosine theta, ' +
-        'rising steeply from one at zero degrees toward infinity near ' +
-        'ninety degrees, with a marker at the selected angle.'
+      class: 'explainer__cos-svg'
     });
 
     // Axes (hairlines).
@@ -254,7 +253,8 @@
         overlay.style.transform = 'rotate(' + theta + 'deg)';
       }
 
-      var err = fmtSignedPct(velocityError(theta0, theta));
+      var errFrac = velocityError(theta0, theta);
+      var err = fmtSignedPct(errFrac);
       var mult = velocityMultiplier(theta);
       var multText = (mult > 50) ? 'diverges' : '×' + mult.toFixed(2);
 
@@ -264,9 +264,15 @@
         thetaSpan.textContent = 'θ = ' + Math.round(theta) + '°';
       }
 
-      // Primary signed velocity error.
+      // Primary signed velocity error. The data-sign attribute drives the
+      // colour language: 0 renders in neutral ink (zero is not an error),
+      // ±1 reserve the brick-red error/emphasis tone for nonzero deviations.
       if (errSpan) {
         errSpan.textContent = 'velocity error ' + err.text;
+        errSpan.setAttribute(
+          'data-sign',
+          errFrac === 0 ? '0' : (errFrac > 0 ? '1' : '-1')
+        );
       }
 
       // Secondary angle-correction multiplier 1 / cos(theta).
@@ -280,8 +286,7 @@
       // Accessible live value on the slider itself.
       slider.setAttribute(
         'aria-valuetext',
-        Math.round(theta) + ' degrees, velocity error ' +
-          fmtSignedPct(velocityError(theta0, theta)).text
+        Math.round(theta) + ' degrees, velocity error ' + err.text
       );
     }
 

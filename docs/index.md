@@ -79,7 +79,7 @@ on.
                  aria-describedby="explainer-theta-readout" />
         </label>
       </div>
-      <div id="explainer-theta-readout" class="explainer__readout" aria-live="polite">
+      <div id="explainer-theta-readout" class="explainer__readout">
         <span class="readout__theta">θ = 60°</span>
         <span class="readout__err">velocity error 0.0%</span>
         <span id="explainer-velocity-gauge" class="readout__mult">velocity multiplier ×2.00</span>
@@ -96,7 +96,7 @@ on.
   </figcaption>
 </figure>
 
-<div class="table-wrap" role="region" aria-label="Velocity multiplier and fractional velocity error by Doppler angle, relative to a 60° reference" tabindex="0">
+<div class="table-wrap explainer__static-table" role="region" aria-label="Velocity multiplier and fractional velocity error by Doppler angle, relative to a 60° reference" tabindex="0">
 <table class="data" id="explainer-fallback-table">
   <caption>Velocity multiplier \( 1/\cos\theta \) and the fractional velocity error relative to a 60° reference.</caption>
   <thead>

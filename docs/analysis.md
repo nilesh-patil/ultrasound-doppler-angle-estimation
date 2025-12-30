@@ -1,3 +1,8 @@
+---
+layout: default
+title: Results & comparative-analysis narrative
+---
+
 # Results & Comparative Analysis — Ultrasound Doppler Angle Estimation
 
 > Estimating the Doppler beam-to-vessel angle θ directly from a single grayscale
@@ -193,7 +198,8 @@ encoders have nothing to grip.
 ### 5.7 Learned vs classical, and fusion
 A purely classical, image-only **structure-tensor** angle prior reaches **3.16° MAE**
 on the narrow base-angle band, and a **circular fusion** of the learned and classical
-estimates reaches **2.72° MAE**, improving on either alone. The learned model and a
+estimates reaches **2.72° MAE**, improving on the classical prior and on the learned
+model's base-band error. The learned model and a
 hand-crafted geometric cue capture **partly complementary** information (both
 recomputed at runtime by `uda.interpret.geometric` and `uda.interpret.fusion`, not
 stored in `results/`).
