@@ -54,21 +54,20 @@ quantifying anything this estimator was tested against.
 
 ## Rotate the beam and watch the velocity move {#explainer}
 
-The slider below rotates a real B-mode image to set an illustrative beam-to-vessel
-angle and shows, live, the angle $$\theta$$ and the fractional velocity error a
-clinic would inherit from it. The rotation is a synthetic, illustrative tool for the
-$$1/\cos\theta$$ relationship; it is not the augmentation grid the model was trained
-on.
+The slider below sweeps the ultrasound beam across a real B-mode image to set an
+illustrative beam-to-vessel angle $$\theta$$, and shows, live, the fractional velocity
+error a clinic would inherit from it. The beam overlay is a synthetic teaching tool for
+the $$1/\cos\theta$$ relationship; it is not the rotation-augmentation grid the model
+was trained on.
 
 <figure class="fig widget" id="chart-explainer">
   <img class="fallback" loading="lazy" decoding="async" src="{{ '/assets/images/bmode/09-49-17_1.jpg' | relative_url }}"
        alt="Longitudinal grayscale B-mode image of a common carotid artery — the static fallback for the interactive Doppler-angle explainer." />
   <div class="live" hidden>
     <section id="doppler-explainer" class="explainer" data-base="{{ '/assets/data/' | relative_url }}">
-      <div class="explainer__stage">
-        <img id="explainer-bmode" class="explainer__bmode"
-             src="{{ '/assets/images/bmode/09-49-17_1.jpg' | relative_url }}"
-             alt="Longitudinal grayscale B-mode image of a common carotid artery, rotated to the angle set by the slider." />
+      <div class="explainer__stage" role="img"
+           aria-label="Longitudinal grayscale B-mode image of a common carotid artery, with a beam-to-vessel angle overlay set by the slider."
+           style="background-image: url('{{ '/assets/images/bmode/09-49-17_1.jpg' | relative_url }}');">
         <svg id="explainer-overlay" class="explainer__overlay" viewBox="0 0 100 100"
              role="presentation" aria-hidden="true"></svg>
       </div>
@@ -130,31 +129,43 @@ previously-unmeasured patient-level number.
 
 <div class="table-wrap" role="region" aria-label="Headline results across the image-level and patient-level sampling protocols" tabindex="0">
 <table class="data">
-  <caption>Headline accuracy under each sampling protocol. Image-level rows are
-  five-fold cross-validation means or pooled out-of-fold; patient-level rows are pooled
-  out-of-fold.</caption>
+  <caption>Headline accuracy under each sampling protocol, with MAPE and MAE shown
+  separately. Image-level rows are five-fold cross-validation means or pooled
+  out-of-fold; patient-level rows are pooled out-of-fold.</caption>
   <thead>
     <tr>
-      <th scope="col">Estimator</th>
-      <th scope="col">Image-level sampling</th>
-      <th scope="col">Patient-level sampling</th>
+      <th scope="col" rowspan="2">Estimator</th>
+      <th scope="colgroup" colspan="2" style="text-align:center">Image-level sampling</th>
+      <th scope="colgroup" colspan="2" style="text-align:center; border-left:1px solid var(--hairline)">Patient-level sampling</th>
+    </tr>
+    <tr>
+      <th scope="col">MAPE (%)</th>
+      <th scope="col">MAE (°)</th>
+      <th scope="col" style="border-left:1px solid var(--hairline)">MAPE (%)</th>
+      <th scope="col">MAE (°)</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th scope="row">Frozen DenseNet201 (grid pooling)</th>
-      <td>5.84% MAPE · 3.77° MAE</td>
+      <td>5.84</td>
+      <td>3.77</td>
+      <td style="border-left:1px solid var(--hairline)">—</td>
       <td>—</td>
     </tr>
     <tr>
       <th scope="row">Tuned DenseNet201</th>
-      <td>4.03% · 3.00°</td>
-      <td>10.80% · 8.62°</td>
+      <td>4.03</td>
+      <td>3.00</td>
+      <td style="border-left:1px solid var(--hairline)">10.80</td>
+      <td>8.62</td>
     </tr>
     <tr class="is-best">
       <th scope="row">Tuned stacked ensemble (5 backbones)</th>
-      <td>2.79% · 1.96° · R²=0.995</td>
-      <td>8.53% · 5.93° · R²=0.952</td>
+      <td>2.79</td>
+      <td>1.96</td>
+      <td style="border-left:1px solid var(--hairline)">8.53</td>
+      <td>5.93</td>
     </tr>
   </tbody>
 </table>

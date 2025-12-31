@@ -1,9 +1,10 @@
 /*
  * doppler-explainer.js — INTERACTIVE #1 (Overview)
  *
- * The conceptual hook: rotate a real B-mode carotid image with a slider and
- * watch the insonation angle theta and the resulting spectral-Doppler velocity
- * error change live. Pure client-side, zero-dependency, progressive enhancement.
+ * The conceptual hook: sweep the ultrasound BEAM across a steady real B-mode
+ * carotid image with a slider and watch the insonation angle theta and the
+ * resulting spectral-Doppler velocity error change live. Pure client-side,
+ * zero-dependency, progressive enhancement.
  *
  * Model (authoritative, from the math spec):
  *   Spectral Doppler reports v from a measured Doppler shift assuming an angle
@@ -17,7 +18,7 @@
  *   eps(80,75)=-32.91%, eps(t0,t0)=0.
  *   Secondary readout: the raw angle-correction multiplier 1 / cos(theta).
  *
- * This rotation is SYNTHETIC / ILLUSTRATIVE: it does not map 1:1 to the
+ * This beam overlay is SYNTHETIC / ILLUSTRATIVE: it does not map 1:1 to the
  * rotation-augmentation grid used to train the estimator. It is a beam-vs-vessel
  * angle teaching tool only.
  *
@@ -198,6 +199,43 @@
     handles.dot.setAttribute('cy', y);
   }
 
+  // -- Beam / vessel / angle overlay (inline SVG over the STATIC B-mode) ----
+  // The image no longer rotates (that left the 4:3 frame mostly empty). Instead
+  // the slider sweeps the ultrasound BEAM across the steady image: we draw the
+  // vessel (flow) axis, the beam at angle theta to it, and the angle arc between
+  // them. Coordinates are in the overlay's 0..100 viewBox; colour + fill:none
+  // come from the .vessel / .beam / .arc CSS, stroke-width is set inline.
+  function buildOverlay(mount) {
+    while (mount.firstChild) mount.removeChild(mount.firstChild);
+    mount.appendChild(el('line', { x1: 10, y1: 54, x2: 90, y2: 54, 'class': 'vessel', 'stroke-width': 1.2 }));
+    var beam = el('line', { 'class': 'beam', 'stroke-width': 1.2 });
+    var arc = el('path', { 'class': 'arc', 'stroke-width': 1 });
+    var label = el('text', { 'text-anchor': 'middle', fill: '#fff', 'font-size': 6, 'font-weight': '600' });
+    mount.appendChild(beam);
+    mount.appendChild(arc);
+    mount.appendChild(label);
+    return { beam: beam, arc: arc, label: label };
+  }
+
+  function updateOverlay(h, theta) {
+    if (!h) return;
+    var t = clampAngle(theta) * DEG;
+    var cx = 50, cy = 54, c = Math.cos(t), s = Math.sin(t);
+    // Beam: through the intersection at angle theta above the (rightward) vessel.
+    h.beam.setAttribute('x1', (cx - 9 * c).toFixed(1));
+    h.beam.setAttribute('y1', (cy + 9 * s).toFixed(1));
+    h.beam.setAttribute('x2', (cx + 44 * c).toFixed(1));
+    h.beam.setAttribute('y2', (cy - 44 * s).toFixed(1));
+    // Angle arc from the vessel (+x) up to the beam, radius 15.
+    var r = 15;
+    h.arc.setAttribute('d', 'M ' + (cx + r) + ' ' + cy + ' A ' + r + ' ' + r + ' 0 0 0 ' +
+      (cx + r * c).toFixed(1) + ' ' + (cy - r * s).toFixed(1));
+    // "theta" label on the arc bisector.
+    h.label.setAttribute('x', (cx + 24 * Math.cos(t / 2)).toFixed(1));
+    h.label.setAttribute('y', (cy - 24 * Math.sin(t / 2) + 2).toFixed(1));
+    h.label.textContent = 'θ';
+  }
+
   // -- Wiring --------------------------------------------------------------
 
   function init() {
@@ -231,6 +269,10 @@
     if (curveMount) {
       try { curveHandles = buildCurve(curveMount); } catch (e) { curveHandles = null; }
     }
+    var overlayHandles = null;
+    if (overlay) {
+      try { overlayHandles = buildOverlay(overlay); } catch (e) { overlayHandles = null; }
+    }
 
     // theta0 is the fixed reference (true) angle; the slider drives theta.
     // If the page exposes a data-theta0, honor it; else default to 60.
@@ -243,15 +285,10 @@
     function render(theta) {
       theta = clampAngle(theta);
 
-      // Rotate the real B-mode image. CSS transform; gated on reduced motion
-      // only for the *transition*, not the snap (set in CSS via .is-ready).
-      if (bmode) {
-        bmode.style.transform = 'rotate(' + theta + 'deg)';
-      }
-      // Optional overlay group (beam / vessel / arc) rotates with the vessel.
-      if (overlay) {
-        overlay.style.transform = 'rotate(' + theta + 'deg)';
-      }
+      // The B-mode image stays STEADY; the slider sweeps the beam across it.
+      // (Rotating the photo left the 4:3 frame mostly empty.) Redraw the
+      // beam / vessel / angle overlay for the current theta.
+      if (overlayHandles) updateOverlay(overlayHandles, theta);
 
       var errFrac = velocityError(theta0, theta);
       var err = fmtSignedPct(errFrac);

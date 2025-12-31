@@ -17,28 +17,20 @@ description: How to reproduce the Doppler-angle estimator end to end — the pix
 The pipeline runs under [pixi](https://pixi.sh): `pixi install` solves and installs the default JAX-CPU environment, and the tasks below carry it from raw images to the regenerated paper tables. The same commands appear verbatim in the analysis narrative (§8) and the repository README.
 
 <div class="table-wrap" role="region" aria-label="Quickstart commands" tabindex="0">
-
-```bash
-pixi install            # solve + install the default (JAX-CPU) env
+<pre><code>pixi install            # solve + install the default (JAX-CPU) env
 pixi run test           # run the test suite
-pixi run all            # labels → 5-backbone replication
-```
-
+pixi run all            # labels → 5-backbone replication</code></pre>
 </div>
 
 The full run, from labels through tuning, out-of-fold ensembling, and the regenerated paper tables:
 
 <div class="table-wrap" role="region" aria-label="End-to-end reproduction commands" tabindex="0">
-
-```bash
-pixi install
+<pre><code>pixi install
 pixi run all                                                     # labels → augment → replicate → figures
 pixi run python scripts/run_tuning.py --protocol both --trials 20 --k 5
 pixi run python scripts/oof_ensemble.py --protocol image
 pixi run python scripts/oof_ensemble.py --protocol patient
-pixi run python scripts/gen_paper_tables.py                      # regenerate paper tables from results/
-```
-
+pixi run python scripts/gen_paper_tables.py                      # regenerate paper tables from results/</code></pre>
 </div>
 
 Every number in `docs/analysis.md` and in `paper/` is regenerated from `results/` by `scripts/gen_paper_tables.py`; the `results/` directory itself is regenerated and never hand-edited. The default `pixi run test` stays green by skipping the TensorFlow-only Grad-CAM and deploy tests (`skipif KERAS_BACKEND != "tensorflow"`); those run under the Apple-silicon GPU environment below.
@@ -69,9 +61,7 @@ All runs use seed 42. The JAX-CPU environment is the reference target for reprod
 The library is typed and tested; configuration lives in one YAML file per experiment; the canonical data, results, and the manuscript each have their own tree.
 
 <div class="table-wrap" role="region" aria-label="Repository layout" tabindex="0">
-
-```
-src/uda/            # typed, tested library
+<pre><code>src/uda/            # typed, tested library
   config.py seed.py cli.py figures.py deploy.py
   data/             # images, labels, augmentation, splits, corpus assembly
   models/           # backbone registry, shallow head, assembled estimator, angle targets
@@ -85,9 +75,7 @@ results/            # metrics.csv + predictions/ + figures/  (regenerated, never
 tests/              # data, label-math, leakage-assertion, target round-trip, eval-module contracts
 legacy/             # the original 2018 notebooks + README (untouched, output-stripped)
 paper/              # LaTeX manuscript; tables generated from results/ by scripts/gen_paper_tables.py
-docs/               # analysis.md — the results & comparative-analysis narrative; this website
-```
-
+docs/               # analysis.md — the results & comparative-analysis narrative; this website</code></pre>
 </div>
 
 ## The data {#data}
@@ -121,7 +109,7 @@ The original 2017–2018 notebooks and weights are preserved untouched, output-s
 The code, data, regenerated results, and the full manuscript are public:
 
 - Repository and data: [GitHub — ultrasound-doppler-angle-estimation](https://github.com/nilesh-patil/ultrasound-doppler-angle-estimation)
-- Manuscript (PDF): [`paper/main.pdf`]({{ '/assets/paper/main.pdf' | relative_url }})
+- Manuscript: [arXiv:2508.04243](https://arxiv.org/abs/2508.04243)
 - Results and comparative-analysis narrative: [Results &amp; analysis]({{ '/analysis/' | relative_url }})
 - Project and author notes: [About]({{ '/about/' | relative_url }})
 

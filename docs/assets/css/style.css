@@ -354,6 +354,13 @@ pre code {
   padding: 0;
   font-size: 1em;
 }
+/* A <pre> inside a .table-wrap region supplies its own bg/scroll, so drop the
+   wrapper's duplicate frame to avoid a double border around code blocks. */
+.table-wrap > pre {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+}
 
 /* --------------------------------------------------------------------------
    9. Data tables
@@ -758,7 +765,10 @@ select {
 }
 .explainer__stage {
   position: relative;
-  background: #000;
+  background-color: #000;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   border: var(--hair) solid var(--hairline);
   border-radius: var(--radius);
   overflow: hidden;

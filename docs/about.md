@@ -32,7 +32,7 @@ The original 2017–2018 notebooks and weights are preserved untouched under `le
 
 ## Links {#links}
 
-- Manuscript (PDF): [`paper/main.pdf`]({{ '/assets/paper/main.pdf' | relative_url }})
+- Manuscript: [arXiv:2508.04243](https://arxiv.org/abs/2508.04243)
 - Source code, data, and regenerated results: [GitHub — ultrasound-doppler-angle-estimation](https://github.com/nilesh-patil/ultrasound-doppler-angle-estimation)
 - Results and comparative-analysis narrative: [Results &amp; analysis]({{ '/analysis/' | relative_url }})
 - How to reproduce every number: [Reproduce]({{ '/reproduce/' | relative_url }})
