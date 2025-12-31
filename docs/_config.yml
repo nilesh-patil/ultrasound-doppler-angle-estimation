@@ -1,6 +1,6 @@
 # Site configuration — "Reading the Doppler angle"
 # Built by GitHub Pages. No plugins beyond the GitHub Pages allowlist (prefer none).
-title: "Reading the Doppler angle"
+title: "Doppler Angle Estimation with Deep Neural Networks"
 description: >-
   Learning the Doppler beam-to-vessel angle directly from a single grayscale
   B-mode carotid image, with no color Doppler and no segmentation. A reproducible

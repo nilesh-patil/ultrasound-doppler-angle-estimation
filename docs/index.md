@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Reading the Doppler angle off the image
+title: Doppler Angle Estimation with Deep Neural Networks
 nav: overview
 mathjax: true
 scripts:
@@ -9,22 +9,32 @@ scripts:
 description: A deep-learning estimator that reads the Doppler beam-to-vessel angle directly from a single grayscale B-mode carotid image, without color Doppler or segmentation. It reaches 1.96° MAE / 2.79% MAPE / R²=0.995 image-level and 5.93° / 8.53% / R²=0.952 patient-level.
 ---
 
-<p class="kicker">Ultrasound · Doppler angle · deep learning</p>
+<p class="kicker">Ultrasound · Doppler angle · deep neural networks</p>
 
-# Reading the Doppler angle off the image
+# Doppler Angle Estimation with Deep Neural Networks
 
-<p class="lede">A tuned stacked ensemble of five frozen ImageNet backbones reads the Doppler
-beam-to-vessel angle straight off a single grayscale B-mode image at
-<strong>1.96° MAE / 2.79% MAPE / R²=0.995</strong> across the augmented corpus, and at
-<strong>5.93° MAE / 8.53% MAPE / R²=0.952</strong> when it is asked to generalize to an
-unseen patient — a roughly 3× gap that is the honest signature of a small cohort. It
-reproduces and improves on the EMBC 2019 paper's best single model and adds the
-patient-level number that work never reported.</p>
+<p class="hero-links"><a href="https://github.com/nilesh-patil/ultrasound-doppler-angle-estimation">GitHub</a> · <a href="https://arxiv.org/abs/2508.04243">arXiv:2508.04243</a> · <a href="https://doi.org/10.1109/EMBC.2019.8857587">IEEE&nbsp;EMBC&nbsp;2019</a></p>
 
-The angle is read with no color Doppler and no segmentation. The orientation is
-already present in the frozen ImageNet features; the load-bearing design choice is a
-small grid-pooling head that keeps it, where a conventional rotation-invariant pooling
-throws it away.
+## The problem and the idea {#background}
+
+Vascular ultrasound measures blood-flow velocity with spectral Doppler, and that
+measurement depends on the angle θ between the ultrasound beam and the vessel. The
+scanner cannot determine θ on its own. In current practice the sonographer reads it off
+the screen and sets it by hand, an operator-dependent step that is repeated on every
+exam.
+
+This matters because the reported velocity scales with **1 / cos θ**. At the steep
+angles used in practice, a few degrees of error in θ produce a large error in velocity,
+and velocity is the quantity a clinician acts on, for example when grading how narrowed
+a carotid artery is. Improper angle correction is a well-documented and recurring source
+of error in vascular labs.
+
+This project tests whether θ can be estimated automatically from a single grayscale
+B-mode image, without color Doppler or manual segmentation, using a deep neural network
+in place of the hand-set angle. It reproduces and extends our EMBC 2019 study. The
+headline result is just below, and the [Method]({{ '/method/' | relative_url }}),
+[Results]({{ '/results/' | relative_url }}), and [Clinical]({{ '/clinical/' | relative_url }})
+pages document the rest, with every number reproducible from code.
 
 ## Why a few degrees of angle is a velocity problem {#why-angle}
 
